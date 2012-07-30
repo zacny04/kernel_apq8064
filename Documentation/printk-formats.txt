@@ -53,6 +53,24 @@ Struct Resources:
 	For printing struct resources. The 'R' and 'r' specifiers result in a
 	printed resource with ('R') or without ('r') a decoded flags member.
 
+Physical addresses:
+
+	%pa	0x01234567 or 0x0123456789abcdef
+
+	For printing a phys_addr_t type (and its derivatives, such as
+	resource_size_t) which can vary based on build options, regardless of
+	the width of the CPU data path. Passed by reference.
+
+Raw buffer as a hex string:
+	%*ph	00 01 02  ...  3f
+	%*phC	00:01:02: ... :3f
+	%*phD	00-01-02- ... -3f
+	%*phN	000102 ... 3f
+
+	For printing a small buffers (up to 64 bytes long) as a hex string with
+	certain separator. For the larger buffers consider to use
+	print_hex_dump().
+
 MAC/FDDI addresses:
 
 	%pM	00:01:02:03:04:05
