@@ -269,15 +269,6 @@ int kgsl_pwrscale_policy_add_files(struct kgsl_device *device,
 {
 	int ret;
 
-	kobject_del(&pwrscale->kobj);
-	kobject_put(&pwrscale->kobj);
-
-	ret = kobject_add(&pwrscale->kobj, &device->pwrscale_kobj,
-		"%s", pwrscale->policy->name);
-
-	if (ret)
-		return ret;
-
 	ret = sysfs_create_group(&pwrscale->kobj, attr_group);
 
 	return ret;
@@ -360,7 +351,9 @@ int kgsl_pwrscale_init(struct kgsl_device *device)
 	if (ret)
 		return ret;
 
-	kobject_init(&device->pwrscale.kobj, &ktype_pwrscale_policy);
+        ret = kobject_init_and_add(&device->pwrscale.kobj, &ktype_pwrscale_policy,
+		&device->pwrscale_kobj, "policy_config");
+
 	return ret;
 }
 EXPORT_SYMBOL(kgsl_pwrscale_init);
