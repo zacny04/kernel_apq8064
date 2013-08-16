@@ -468,4 +468,3 @@ int __init kcal_ctrl_init(void)
 
 late_initcall(kcal_ctrl_init);
 MODULE_LICENSE("GPL and additional rights");
-
