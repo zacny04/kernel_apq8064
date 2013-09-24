@@ -322,7 +322,7 @@ static inline void invoke_softirq(void)
 #ifdef __ARCH_IRQ_EXIT_IRQS_DISABLED
 		__do_softirq();
 #else
-		do_softirq();
+		do_softirq_own_stack();
 #endif
 	} else {
 		__local_bh_disable((unsigned long)__builtin_return_address(0),
