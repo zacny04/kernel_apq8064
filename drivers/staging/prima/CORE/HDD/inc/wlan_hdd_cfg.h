@@ -1812,23 +1812,6 @@ typedef enum
 #define CFG_SPLIT_SCAN_TRAFFIC_MONITOR_TIMER_MAX       ( 10000 )
 #define CFG_SPLIT_SCAN_TRAFFIC_MONITOR_TIMER_DEFAULT   ( 5000 )
 
-//Enable debug for remain on channel issues
-#define CFG_DEBUG_P2P_REMAIN_ON_CHANNEL_NAME    "gDebugP2pRemainOnChannel"
-#define CFG_DEBUG_P2P_REMAIN_ON_CHANNEL_DEFAULT ( 0 )
-#define CFG_DEBUG_P2P_REMAIN_ON_CHANNEL_MIN     ( 0 )
-#define CFG_DEBUG_P2P_REMAIN_ON_CHANNEL_MAX     ( 1 )
-
-
-#define CFG_AMSDU_SUPPORT_IN_AMPDU_NAME                "gAmsduSupportInAMPDU"
-#define CFG_AMSDU_SUPPORT_IN_AMPDU_MIN                 (0)
-#define CFG_AMSDU_SUPPORT_IN_AMPDU_MAX                 (1)
-#define CFG_AMSDU_SUPPORT_IN_AMPDU_DEFAULT             (0) //disabled
-
-#define CFG_ENABLE_STRICT_REGULATORY_FOR_FCC_NAME                "gEnableStrictRegulatoryForFCC"
-#define CFG_ENABLE_STRICT_REGULATORY_FOR_FCC_MIN                 ( 0 )
-#define CFG_ENABLE_STRICT_REGULATORY_FOR_FCC_MAX                 ( 1 )
-#define CFG_ENABLE_STRICT_REGULATORY_FOR_FCC_DEFAULT             ( 0 )
-
 /*---------------------------------------------------------------------------
   Type declarations
   -------------------------------------------------------------------------*/
@@ -2217,9 +2200,6 @@ v_U16_t                     configMccParam;
                                                  //splitscan
    //Traffic monitor timer for split scan
    v_U32_t                     trafficMntrTmrForSplitScan;
-   v_BOOL_t                    debugP2pRemainOnChannel;
-   v_U8_t                      isAmsduSupportInAMPDU;
-   v_BOOL_t                    gEnableStrictRegulatoryForFCC;
 } hdd_config_t;
 /*--------------------------------------------------------------------------- 
   Function declarations and documenation

@@ -176,7 +176,6 @@ DEFINE_SPINLOCK(hdd_context_lock);
 #define SIZE_OF_SETROAMMODE             11    /* size of SETROAMMODE */
 #define SIZE_OF_GETROAMMODE             11    /* size of GETROAMMODE */
 
-#define WLAN_PRIV_DATA_MAX_LEN 4096
 /*
  * Driver miracast parameters 0-Disabled
  * 1-Source, 2-Sink
@@ -595,8 +594,7 @@ int hdd_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
        goto exit;
    }
 
-   if (priv_data.total_len <= 0 ||
-            priv_data.total_len > WLAN_PRIV_DATA_MAX_LEN)
+   if (priv_data.total_len <= 0)
    {
        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_WARN,
                  "%s:invalid priv_data.total_len(%d)!!!", __func__,
@@ -2116,25 +2114,6 @@ int hdd_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
            pHddCtx->drvr_miracast = filterType;
            hdd_tx_rx_pkt_cnt_stat_timer_handler(pHddCtx);
         }
-        else if (strncmp(command, "BTCOEXMODE", 10) == 0 )
-        {
-            char *dhcpPhase;
-            dhcpPhase = command + 11;
-            if ('1' == *dhcpPhase)
-            {
-               VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
-                         FL("BTCOEXMODE %d"), *dhcpPhase);
-
-               pHddCtx->btCoexModeSet = TRUE;
-            }
-            else if ('2' == *dhcpPhase)
-            {
-                VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
-                         FL("BTCOEXMODE %d"), *dhcpPhase);
-
-               pHddCtx->btCoexModeSet = FALSE;
-            }
-       }
        else {
            hddLog( VOS_TRACE_LEVEL_WARN, "%s: Unsupported GUI command %s",
                    __func__, command);
@@ -2203,8 +2182,8 @@ VOS_STATUS hdd_parse_send_action_frame_data(tANI_U8 *pValue, tANI_U8 *pTargetApB
     int v = 0;
     tANI_U8 tempBuf[32];
     tANI_U8 tempByte = 0;
-    /* 12 hexa decimal digits, 5 ':' and '\0' */
-    tANI_U8 macAddress[18];
+    /* 12 hexa decimal digits and 5 ':' */
+    tANI_U8 macAddress[17];
 
     inPtr = strnchr(pValue, strlen(pValue), SPACE_ASCII_VALUE);
     /*no argument after the command*/
@@ -2258,7 +2237,7 @@ VOS_STATUS hdd_parse_send_action_frame_data(tANI_U8 *pValue, tANI_U8 *pTargetApB
     }
 
     /*getting the next argument ie the channel number */
-    v = sscanf(inPtr, "%31s ", tempBuf);
+    v = sscanf(inPtr, "%32s ", tempBuf);
     if (1 != v) return -EINVAL;
 
     v = kstrtos32(tempBuf, 10, &tempInt);
@@ -2281,11 +2260,11 @@ VOS_STATUS hdd_parse_send_action_frame_data(tANI_U8 *pValue, tANI_U8 *pTargetApB
     }
 
     /*getting the next argument ie the dwell time */
-    v = sscanf(inPtr, "%31s ", tempBuf);
+    v = sscanf(inPtr, "%32s ", tempBuf);
     if (1 != v) return -EINVAL;
 
     v = kstrtos32(tempBuf, 10, &tempInt);
-    if ( v < 0 || tempInt < 0) return -EINVAL;
+    if ( v < 0 || tempInt <= 0) return -EINVAL;
 
     *pDwellTime = tempInt;
 
@@ -2471,7 +2450,7 @@ VOS_STATUS hdd_parse_channellist(tANI_U8 *pValue, tANI_U8 *pChannelList, tANI_U8
     }
 
     /*getting the first argument ie the number of channels*/
-    v = sscanf(inPtr, "%31s ", buf);
+    v = sscanf(inPtr, "%32s ", buf);
     if (1 != v) return -EINVAL;
 
     v = kstrtos32(buf, 10, &tempInt);
@@ -2522,7 +2501,7 @@ VOS_STATUS hdd_parse_channellist(tANI_U8 *pValue, tANI_U8 *pChannelList, tANI_U8
             }
         }
 
-        v = sscanf(inPtr, "%31s ", buf);
+        v = sscanf(inPtr, "%32s ", buf);
         if (1 != v) return -EINVAL;
 
         v = kstrtos32(buf, 10, &tempInt);
@@ -2564,8 +2543,8 @@ VOS_STATUS hdd_parse_reassoc_command_data(tANI_U8 *pValue,
     int tempInt;
     int v = 0;
     tANI_U8 tempBuf[32];
-    /* 12 hexa decimal digits, 5 ':' and '\0' */
-    tANI_U8 macAddress[18];
+    /* 12 hexa decimal digits and 5 ':' */
+    tANI_U8 macAddress[17];
 
     inPtr = strnchr(pValue, strlen(pValue), SPACE_ASCII_VALUE);
     /*no argument after the command*/
@@ -2619,7 +2598,7 @@ VOS_STATUS hdd_parse_reassoc_command_data(tANI_U8 *pValue,
     }
 
     /*getting the next argument ie the channel number */
-    v = sscanf(inPtr, "%31s ", tempBuf);
+    v = sscanf(inPtr, "%32s ", tempBuf);
     if (1 != v) return -EINVAL;
 
     v = kstrtos32(tempBuf, 10, &tempInt);
@@ -2673,6 +2652,7 @@ v_BOOL_t hdd_is_valid_mac_address(const tANI_U8 *pMacAddr)
         }
         else
         {
+            separator = -1;
             /* Invalid MAC found */
             return 0;
         }
@@ -5192,6 +5172,21 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
    // the expectation is that by the time Request Full Power has completed,
    // all scans will be cancelled.
    hdd_abort_mac_scan(pHddCtx, eCSR_SCAN_ABORT_DEFAULT);
+
+   //Stop the traffic monitor timer
+   if ( VOS_TIMER_STATE_RUNNING ==
+                        vos_timer_getCurrentState(&pHddCtx->tx_rx_trafficTmr))
+   {
+        vos_timer_stop(&pHddCtx->tx_rx_trafficTmr);
+   }
+
+   // Destroy the traffic monitor timer
+   if (!VOS_IS_STATUS_SUCCESS(vos_timer_destroy(
+                         &pHddCtx->tx_rx_trafficTmr)))
+   {
+       hddLog(VOS_TRACE_LEVEL_ERROR,
+           "%s: Cannot deallocate Traffic monitor timer", __func__);
+   }
 
    //Stop the traffic monitor timer
    if ( VOS_TIMER_STATE_RUNNING ==

@@ -81,10 +81,6 @@
 #include "wlan_qct_wda.h"
 #include "halMsgApi.h"
 #include "vos_trace.h"
-#include "sme_Trace.h"
-#include "vos_types.h"
-#include "vos_trace.h"
-
 #include "sapApi.h"
 
 
@@ -8591,8 +8587,7 @@ void smeGetCommandQStatus( tHalHandle hHal )
 
     if (NULL == pMac)
     {
-        VOS_TRACE( VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
-                       "smeGetCommandQStatus: pMac is NULL");
+        smsLog( pMac, LOGE, "smeGetCommandQStatus: pMac is NULL" );
         return;
     }
 

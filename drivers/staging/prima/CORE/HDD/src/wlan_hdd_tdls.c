@@ -724,7 +724,6 @@ int wlan_hdd_tdls_init(hdd_adapter_t *pAdapter)
     }
     INIT_WORK(&pHddTdlsCtx->implicit_setup, wlan_hdd_tdls_pre_setup);
     INIT_DELAYED_WORK(&pHddCtx->tdls_scan_ctxt.tdls_scan_work, wlan_hdd_tdls_schedule_scan);
-    mutex_unlock(&pHddCtx->tdls_lock);
 
     return 0;
 }
