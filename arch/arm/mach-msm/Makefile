@@ -31,7 +31,6 @@ obj-$(CONFIG_ARCH_MSM_SCORPIONMP) += perf_event_msm_l2.o
 obj-$(CONFIG_ARCH_MSM_KRAIT) += msm-krait-l2-accessors.o pmu.o
 obj-$(CONFIG_ARCH_MSM_KRAIT) += krait-scm.o
 obj-$(CONFIG_ARCH_MSM7X27A) += pmu.o
-obj-$(CONFIG_DEBUG_FS) += perf_debug.o
 
 ifndef CONFIG_MSM_SMP
 obj-$(CONFIG_ARCH_MSM_SCORPION) += msm_fault_handlers.o
@@ -472,16 +471,4 @@ CFLAGS_board-rdtags.o	:= \
 
 obj-y += power_debug.o
 obj-$(CONFIG_MSM_MODEM_SUBSYSTEM_RESTART_MONITOR) += modem_restart_monitor.o
-
-obj-$(CONFIG_LCD_KCAL_STANDALONE) += msm_kcal_ctrl.o
-
-obj-$(CONFIG_ARCH_MSM8974) += msm_mpmctr.o
-obj-$(CONFIG_MSM_CPR_REGULATOR) += cpr-regulator.o
-obj-$(CONFIG_CPU_FREQ_MSM) += cpufreq.o
-
-obj-$(CONFIG_WALL_CLK) += wallclk.o
-obj-$(CONFIG_WALL_CLK_SYSFS) += wallclk_sysfs.o
-
-obj-$(CONFIG_CPU_FREQ_MSM) += cpufreq.o
-
-obj-$(CONFIG_LCD_KCAL_STANDALONE) += msm_kcal_ctrl.o
+obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
