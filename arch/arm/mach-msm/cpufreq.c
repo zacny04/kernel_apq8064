@@ -30,8 +30,8 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/platform_device.h>
+#include <linux/of.h>
 #include <trace/events/power.h>
-#include <mach/socinfo.h>
 #include <mach/cpufreq.h>
 #include <mach/msm_bus.h>
 
@@ -358,11 +358,11 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	if (table == NULL)
 		return -ENODEV;
 	/*
-	 * In 8625 both cpu core's frequency can not
+	 * In some SoC, cpu cores' frequencies can not
 	 * be changed independently. Each cpu is bound to
 	 * same frequency. Hence set the cpumask to all cpu.
 	 */
-	if (cpu_is_msm8625())
+	if (is_sync)
 		cpumask_setall(policy->cpus);
 
 	cpu_work = &per_cpu(cpufreq_work, policy->cpu);
