@@ -240,7 +240,7 @@ enum {
 	WQ_FREEZABLE		= 1 << 2, /* freeze during suspend */
 	WQ_MEM_RECLAIM		= 1 << 3, /* may be used for memory reclaim */
 	WQ_HIGHPRI		= 1 << 4, /* high priority */
-	WQ_CPU_INTENSIVE	= 1 << 5, /* cpu instensive workqueue */
+	WQ_CPU_INTENSIVE	= 1 << 5, /* cpu intensive workqueue */
 
 	/*
 	 * Per-cpu workqueues are generally preferred because they tend to
