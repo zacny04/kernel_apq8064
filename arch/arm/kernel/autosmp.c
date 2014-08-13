@@ -61,8 +61,7 @@ static struct asmp_param_struct {
 	.cycle_down = 3,
 };
 
-static unsigned int cycle = 0, delay0 = 0;
-static unsigned long delay_jif = 0;
+static unsigned int cycle = 0;
 static int enabled __read_mostly = 1;
 
 static void __cpuinit asmp_work_fn(struct work_struct *work) {
@@ -72,11 +71,6 @@ static void __cpuinit asmp_work_fn(struct work_struct *work) {
 	int nr_cpu_online;
 
 	cycle++;
-
-	if (asmp_param.delay != delay0) {
-		delay0 = asmp_param.delay;
-		delay_jif = msecs_to_jiffies(delay0);
-	}
 
 	/* get maximum possible freq for cpu0 and
 	   calculate up/down limits */
@@ -126,16 +120,17 @@ static void __cpuinit asmp_work_fn(struct work_struct *work) {
 		}
 	} /* else do nothing */
 
-	queue_delayed_work(asmp_workq, &asmp_work, delay_jif);
+	queue_delayed_work(asmp_workq, &asmp_work,
+			   msecs_to_jiffies(asmp_param.delay));
 }
 
 static void asmp_power_suspend(struct power_suspend *h) {
-	unsigned int cpu;
+	int cpu;
 
 	/* unplug online cpu cores */
 	if (asmp_param.scroff_single_core)
-		for_each_present_cpu(cpu)
-			if (cpu && cpu_online(cpu))
+		for (cpu = 1; cpu < nr_cpu_ids; cpu++)
+			if (cpu_online(cpu))
 				cpu_down(cpu);
 
 	/* suspend main work thread */
@@ -146,16 +141,14 @@ static void asmp_power_suspend(struct power_suspend *h) {
 }
 
 static void __cpuinit asmp_late_resume(struct power_suspend *h) {
-	unsigned int cpu;
+	int cpu;
 
 	/* hotplug offline cpu cores */
 	if (asmp_param.scroff_single_core)
-		for_each_present_cpu(cpu) {
-			if (num_online_cpus() >= asmp_param.max_cpus)
-				break;
+		for (cpu = 1; cpu < nr_cpu_ids; cpu++)
 			if (!cpu_online(cpu))
 				cpu_up(cpu);
-		}
+
 	/* resume main work thread */
 	if (enabled)
 		queue_delayed_work(asmp_workq, &asmp_work,
@@ -171,7 +164,7 @@ static struct power_suspend __refdata asmp_power_suspend_handler = {
 
 static int __cpuinit set_enabled(const char *val, const struct kernel_param *kp) {
 	int ret;
-	unsigned int cpu;
+	int cpu;
 
 	ret = param_set_bool(val, kp);
 	if (enabled) {
@@ -180,12 +173,9 @@ static int __cpuinit set_enabled(const char *val, const struct kernel_param *kp)
 		pr_info(ASMP_TAG"enabled\n");
 	} else {
 		cancel_delayed_work_sync(&asmp_work);
-		for_each_present_cpu(cpu) {
-			if (num_online_cpus() >= nr_cpu_ids)
-				break;
+		for (cpu = 1; cpu < nr_cpu_ids; cpu++)
 			if (!cpu_online(cpu))
 				cpu_up(cpu);
-		}
 		pr_info(ASMP_TAG"disabled\n");
 	}
 	return ret;
@@ -290,10 +280,8 @@ static struct attribute_group asmp_stats_attr_group = {
 /****************************** SYSFS END ******************************/
 
 static int __init asmp_init(void) {
-	unsigned int cpu;
-	int rc;
+	int cpu, rc;
 
-	asmp_param.max_cpus = nr_cpu_ids;
 	for_each_possible_cpu(cpu)
 		per_cpu(asmp_cpudata, cpu).times_hotplugged = 0;
 
