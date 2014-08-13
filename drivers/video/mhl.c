@@ -1595,7 +1595,7 @@ static ssize_t mhl_store_mouse_move_distance_dy(struct device *dev,
 static void mhl_device_release(struct device *dev)
 {
 	struct mhl_device *mhl_dev = to_mhl_device(dev);
-	unregister_early_suspend(&mhl_dev->early_suspend);
+	unregister_power_suspend(&mhl_dev->power_suspend);
 	kfree(mhl_dev);
 }
 
@@ -1616,13 +1616,13 @@ void mhl_device_shutdown(struct mhl_device *mhl_dev)
 }
 EXPORT_SYMBOL(mhl_device_shutdown);
 
-#if defined(CONFIG_HAS_EARLYSUSPEND) && defined(CONFIG_MHL_RAP)
-static void mhl_early_suspend(struct early_suspend *handler)
+#if defined(CONFIG_POWERSUSPEND) && defined(CONFIG_MHL_RAP)
+static void mhl_power_suspend(struct power_suspend *handler)
 {
 	struct mhl_device *mhl_dev =
-		container_of(handler, struct mhl_device, early_suspend);
+		container_of(handler, struct mhl_device, power_suspend);
 
-	dev_info(&mhl_dev->dev, "early suspend\n");
+	dev_info(&mhl_dev->dev, "power suspend\n");
 
 	/* cancel power key transmission */
 	del_timer(&mhl_dev->rap_powerkey_timer);
@@ -1643,12 +1643,12 @@ static void mhl_early_suspend(struct early_suspend *handler)
 	mhl_content_off_and_suspend(mhl_dev);
 }
 
-static void mhl_early_resume(struct early_suspend *handler)
+static void mhl_power_resume(struct power_suspend *handler)
 {
 	struct mhl_device *mhl_dev =
-		container_of(handler, struct mhl_device, early_suspend);
+		container_of(handler, struct mhl_device, power_suspend);
 
-	dev_info(&mhl_dev->dev, "early resume\n");
+	dev_info(&mhl_dev->dev, "power resume\n");
 
 	mhl_dev->suspended = 0;
 
@@ -1698,12 +1698,11 @@ struct mhl_device *mhl_device_register(const char *name,
 	dev_set_name(&mhl_dev->dev, name);
 	dev_set_drvdata(&mhl_dev->dev, drvdata);
 
-#if defined(CONFIG_HAS_EARLYSUSPEND) && defined(CONFIG_MHL_RAP)
-	mhl_dev->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN;
-	mhl_dev->early_suspend.suspend = mhl_early_suspend;
-	mhl_dev->early_suspend.resume = mhl_early_resume;
+#if defined(CONFIG_POWERSUSPEND) && defined(CONFIG_MHL_RAP)
+	mhl_dev->power_suspend.suspend = mhl_power_suspend;
+	mhl_dev->power_suspend.resume = mhl_power_resume;
 #endif
-	register_early_suspend(&mhl_dev->early_suspend);
+	register_power_suspend(&mhl_dev->power_suspend);
 
 	rc = device_register(&mhl_dev->dev);
 	if (rc) {
@@ -1771,7 +1770,7 @@ err_input_register:
 err_input_alloc:
 	mhl_device_unregister(mhl_dev);
 err_register:
-	unregister_early_suspend(&mhl_dev->early_suspend);
+	unregister_power_suspend(&mhl_dev->power_suspend);
 	kfree(mhl_dev);
 err:
 	return ERR_PTR(rc);
@@ -1798,7 +1797,7 @@ void mhl_device_unregister(struct mhl_device *mhl_dev)
 	}
 	mhl_dev->ops = NULL;
 	mutex_unlock(&mhl_dev->ops_mutex);
-	unregister_early_suspend(&mhl_dev->early_suspend);
+	unregister_power_suspend(&mhl_dev->power_suspend);
 	device_unregister(&mhl_dev->dev);
 }
 EXPORT_SYMBOL(mhl_device_unregister);
