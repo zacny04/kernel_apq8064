@@ -147,9 +147,9 @@ autogroup_move_group(struct task_struct *p, struct autogroup *ag)
 		goto out;
 
 	t = p;
-	do {
+	for_each_thread(p, t) {
 		sched_move_task(t);
-	} while_each_thread(p, t);
+	}
 
 out:
 	unlock_task_sighand(p, &flags);
