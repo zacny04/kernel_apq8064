@@ -78,7 +78,6 @@
 #endif
 #include <mach/msm_memtypes.h>
 #include <linux/bootmem.h>
-#include <linux/memblock.h>
 #include <asm/setup.h>
 #include <mach/dma.h>
 #include <mach/msm_dsps.h>
@@ -116,7 +115,6 @@
 #include "board-sony_fusion3-isdbt.h"
 #endif
 #include <mach/restart.h>
-#include <mach/msm_iomap.h>
 #ifdef CONFIG_MSM_GSBI7_UART
 #include <mach/msm_serial_hs_lite.h>
 #include <linux/serial_core.h>

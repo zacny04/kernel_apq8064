@@ -36,7 +36,6 @@
 #include <mach/socinfo.h>
 #include <mach/system.h>
 #include <mach/scm.h>
-#include <mach/socinfo.h>
 #include <mach/msm-krait-l2-accessors.h>
 #include <asm/cacheflush.h>
 #include <asm/hardware/gic.h>

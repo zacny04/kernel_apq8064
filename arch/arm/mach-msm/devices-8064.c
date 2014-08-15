@@ -38,7 +38,6 @@
 #include <mach/msm_smd.h>
 #include <mach/msm_dcvs.h>
 #include <mach/msm_rtb.h>
-#include <mach/msm_tsif.h>
 #include <linux/msm_ion.h>
 #include "clock.h"
 #include "pm.h"
