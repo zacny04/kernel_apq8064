@@ -1,41 +1,6 @@
-# We can build either as part of a standalone Kernel build or part
-# of an Android build.  Determine which mechanism is being used
-ifeq ($(MODNAME),)
-	KERNEL_BUILD := 1
-else
-	KERNEL_BUILD := 0
-endif
-
-ifeq ($(KERNEL_BUILD),1)
-	# These are provided in Android-based builds
-	# Need to explicitly define for Kernel-based builds
-	MODNAME := wlan
-	WLAN_ROOT := drivers/staging/prima
-endif
-
-ifeq ($(KERNEL_BUILD),0)
-	# These are configurable via Kconfig for kernel-based builds
-	# Need to explicitly configure for Android-based builds
-
-	#Flag to enable BlueTooth AMP feature
-	CONFIG_PRIMA_WLAN_BTAMP := n
-
-	#Flag to enable Legacy Fast Roaming(LFR)
-	CONFIG_PRIMA_WLAN_LFR := y
-
-	#JB kernel has PMKSA patches, hence enabling this flag
-	CONFIG_PRIMA_WLAN_OKC := y
-
-	# JB kernel has CPU enablement patches, so enable
-	CONFIG_PRIMA_WLAN_11AC_HIGH_TP := y
-
-	#Flag to enable TDLS feature
-	CONFIG_QCOM_TDLS := y
-
-	#Flag to enable Fast Transition (11r) feature
-	CONFIG_QCOM_VOWIFI_11R := y
-
-endif
+KERNEL_BUILD := 1
+MODNAME := wlan
+WLAN_ROOT := drivers/staging/prima
 
 # Feature flags which are not (currently) configurable via Kconfig
 
@@ -46,7 +11,7 @@ BUILD_DEBUG_VERSION := 0
 BUILD_DIAG_VERSION := 0
 
 #Do we panic on bug?  default is to warn
-PANIC_ON_BUG := 1
+PANIC_ON_BUG := 0
 
 #Re-enable wifi on WDI timeout
 RE_ENABLE_WIFI_ON_WDI_TIMEOUT := 0
@@ -604,13 +569,7 @@ ifeq ($(RE_ENABLE_WIFI_ON_WDI_TIMEOUT),1)
 CDEFINES += -DWDI_RE_ENABLE_WIFI_ON_WDI_TIMEOUT
 endif
 
-ifeq ($(KERNEL_BUILD),1)
 CDEFINES += -DWLAN_OPEN_SOURCE
-endif
-
-ifeq ($(findstring opensource, $(WLAN_ROOT)), opensource)
-CDEFINES += -DWLAN_OPEN_SOURCE
-endif
 
 # Fix build for GCC 4.7
 EXTRA_CFLAGS += -Wno-maybe-uninitialized -Wno-unused-function
