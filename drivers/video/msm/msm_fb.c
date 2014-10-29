@@ -46,6 +46,7 @@
 #include <linux/sync.h>
 #include <linux/sw_sync.h>
 #include <linux/file.h>
+#include <linux/moduleparam.h>
 
 #define MSM_FB_C
 #include "msm_fb.h"
@@ -61,6 +62,9 @@
 #ifdef CONFIG_POWERSUSPEND
 #undef CONFIG_POWERSUSPEND
 #endif
+
+int backlight_dimmer = 3;
+module_param(backlight_dimmer, int, 0755);
 
 static unsigned char *fbram;
 static unsigned char *fbram_phys;
@@ -200,13 +204,23 @@ static void msm_fb_set_bl_brightness(struct led_classdev *led_cdev,
 		bl_lvl = 0;
 	else if (value >= MAX_BACKLIGHT_BRIGHTNESS)
 		bl_lvl = mfd->panel_info.bl_max;
-	else
+	else if (backlight_dimmer > 0) {
+		if (value <= backlight_dimmer) {
+			bl_lvl = 1;
+		} else {
+			bl_lvl = (mfd->panel_info.bl_min + ((value - 1) * 2 *
+				(mfd->panel_info.bl_max - mfd->panel_info.bl_min) +
+				MAX_BACKLIGHT_BRIGHTNESS - 1) /
+				(MAX_BACKLIGHT_BRIGHTNESS - 1) / 2) - backlight_dimmer;
+		}
+	} else {
 		bl_lvl = mfd->panel_info.bl_min + ((value - 1) * 2 *
 			(mfd->panel_info.bl_max - mfd->panel_info.bl_min) +
 			MAX_BACKLIGHT_BRIGHTNESS - 1) /
 			(MAX_BACKLIGHT_BRIGHTNESS - 1) / 2;
+	}
 
-        down(&mfd->sem);
+	down(&mfd->sem);
 	msm_fb_set_backlight(mfd, bl_lvl);
 	up(&mfd->sem);
 }
@@ -395,7 +409,7 @@ static void msm_fb_shutdown(struct platform_device *pdev)
                return;
        }
        lock_fb_info(mfd->fbi);
-		msm_fb_release_all(mfd->fbi, true);
+       msm_fb_release_all(mfd->fbi, true);
        unlock_fb_info(mfd->fbi);
 }
 static int msm_fb_probe(struct platform_device *pdev)
