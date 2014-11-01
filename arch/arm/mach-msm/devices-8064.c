@@ -3091,11 +3091,19 @@ static struct msm_dcvs_core_info apq8064_core_info = {
 	}
 };
 
-#define APQ8064_LPM_LATENCY  1000 /* >100 usec for WFI */
+static int apq8064_LPM_latency = 1000; /* >100 usec for WFI */
+
+struct platform_device apq8064_cpu_idle_device = {
+	.name   = "msm_cpu_idle",
+	.id     = -1,
+	.dev = {
+		.platform_data = &apq8064_LPM_latency,
+	},
+};
 
 static struct msm_gov_platform_data gov_platform_data = {
 	.info = &apq8064_core_info,
-	.latency = APQ8064_LPM_LATENCY,
+	.latency = 1000, /* equal to apq8064_LPM_latency */
 };
 
 struct platform_device apq8064_msm_gov_device = {
