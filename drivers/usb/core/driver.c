@@ -962,7 +962,7 @@ static void unbind_marked_interfaces(struct usb_device *udev)
  * Note: Rebinds will be skipped if a system sleep transition is in
  * progress and the PM "complete" callback hasn't occurred yet.
  */
-static void usb_rebind_intf(struct usb_interface *intf)
+void usb_rebind_intf(struct usb_interface *intf)
 {
 	int rc;
 
