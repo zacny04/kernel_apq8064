@@ -1770,13 +1770,6 @@ config MSM_VREG_SWITCH_INVERTED
 	help
 	  Reverses the enable and disable for vreg switch.
 
-config MSM_DMA_TEST
-	tristate "MSM DMA test module"
-	default m
-	help
-	  Intended to be compiled as a module.  Provides a device node
-	  and ioctls for testing the MSM dma system.
-
 config WIFI_CONTROL_FUNC
 	bool "Enable WiFi control function abstraction"
 	help
