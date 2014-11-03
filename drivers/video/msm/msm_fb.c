@@ -206,6 +206,12 @@ static void msm_fb_set_bl_brightness(struct led_classdev *led_cdev,
 			MAX_BACKLIGHT_BRIGHTNESS - 1) /
 			(MAX_BACKLIGHT_BRIGHTNESS - 1) / 2;
 
+	/*
+	 * Little hack to allow the lowest brightness value to be as low as possible
+	 */
+	if (bl_lvl <= 5)
+		bl_lvl = mfd->panel_info.bl_min;
+
         down(&mfd->sem);
 	msm_fb_set_backlight(mfd, bl_lvl);
 	up(&mfd->sem);
