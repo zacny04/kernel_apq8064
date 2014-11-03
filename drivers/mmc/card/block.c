@@ -1353,7 +1353,7 @@ static int mmc_blk_err_check(struct mmc_card *card,
 			       brq->stop.resp[0]);
 			gen_err = 1;
 		}
-		
+
 		do {
 			int err = get_card_status(card, &status, 5);
 			if (err) {
