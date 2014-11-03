@@ -401,7 +401,7 @@ static void msm_fb_shutdown(struct platform_device *pdev)
                return;
        }
        lock_fb_info(mfd->fbi);
-	msm_fb_release_all(mfd->fbi, true);
+		msm_fb_release_all(mfd->fbi, true);
        unlock_fb_info(mfd->fbi);
 }
 static int msm_fb_probe(struct platform_device *pdev)
