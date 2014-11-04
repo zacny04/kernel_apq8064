@@ -259,6 +259,11 @@ void release_sysfs_dirent(struct sysfs_dirent * sd)
 	 * sd->s_parent won't change beneath us.
 	 */
 	parent_sd = sd->s_parent;
+	if(!(sd->s_flags & SYSFS_FLAG_REMOVED)) {
+		printk("%s-%d sysfs_dirent use after free: %s-%s\n",
+			__func__, __LINE__, parent_sd->s_name, sd->s_name);
+		dump_stack();
+	}
 
 	if (sysfs_type(sd) == SYSFS_KOBJ_LINK)
 		sysfs_put(sd->s_symlink.target_sd);
@@ -944,6 +949,12 @@ static struct sysfs_dirent *sysfs_dir_pos(const void *ns,
 		int valid = !(pos->s_flags & SYSFS_FLAG_REMOVED) &&
 			pos->s_parent == parent_sd &&
 			hash == pos->s_hash;
+
+		if ((atomic_read(&pos->s_count) == 1)) {
+			printk("%s-%d sysfs_dirent use after free: %s(%s)-%s, %lld-%u\n",
+				__func__, __LINE__, parent_sd->s_name, pos->s_parent->s_name,
+				pos->s_name, hash, pos->s_hash);
+		}
 		sysfs_put(pos);
 		if (!valid)
 			pos = NULL;
