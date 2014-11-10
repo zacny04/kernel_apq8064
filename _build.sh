@@ -1,4 +1,4 @@
-export TCHAIN=/home/thomas/android/arm-eabi-4.9-sabermod/bin/arm-eabi-
+export TCHAIN=/home/thomas/android/arm-eabi-4.9/bin/arm-eabi-
 
 make ARCH=arm clean
 make ARCH=arm CROSS_COMPILE=$TCHAIN kma_fusion3_yuga_defconfig
