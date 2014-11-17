@@ -469,6 +469,14 @@ typedef enum
    DATA_RATE_11AC_MAX_MCS_NA
 } eDataRate11ACMaxMcs;
 
+/* SSID broadcast  type */
+typedef enum eSSIDBcastType
+{
+  eBCAST_UNKNOWN      = 0,
+  eBCAST_NORMAL       = 1,
+  eBCAST_HIDDEN       = 2,
+} tSSIDBcastType;
+
 /* MCS Based VHT rate table */
 static struct index_vht_data_rate_type supported_vht_mcs_rate[] =
 {
@@ -7868,7 +7876,7 @@ static int wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
                request->match_sets[i].ssid.ssid_len);
         pPnoRequest->aNetworks[i].authentication = 0; /*eAUTH_TYPE_ANY*/
         pPnoRequest->aNetworks[i].encryption     = 0; /*eED_ANY*/
-        pPnoRequest->aNetworks[i].bcastNetwType  = 0; /*eBCAST_UNKNOWN*/
+        pPnoRequest->aNetworks[i].bcastNetwType  = eBCAST_NORMAL; /*eBCAST_NORMAL*/
 
         /*Copying list of valid channel into request */
         memcpy(pPnoRequest->aNetworks[i].aChannels, valid_ch, num_ch);
