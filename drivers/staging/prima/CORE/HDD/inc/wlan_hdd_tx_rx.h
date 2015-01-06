@@ -261,4 +261,13 @@ void hdd_mon_tx_work_queue(struct work_struct *work);
   ===========================================================================*/
 void hdd_tx_rx_pkt_cnt_stat_timer_handler( void *pAdapter);
 
+/**=========================================================================
+  @brief hdd_wmm_acquire_access_required()-
+                   Determine whether wmm ac acquire access is required
+  @param pAdapter  : pointer to Adapter context
+  @param acType    : AC
+  @return          : void
+   ========================================================================*/
+void hdd_wmm_acquire_access_required(hdd_adapter_t *pAdapter,
+                                     WLANTL_ACEnumType acType);
 #endif    // end #if !defined( WLAN_HDD_TX_RX_H )
