@@ -195,15 +195,11 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 	} while (0)
 #endif
 
-#define INIT_WORK(_work, _func)					\
-	do {							\
-		__INIT_WORK((_work), (_func), 0);		\
-	} while (0)
+#define INIT_WORK(_work, _func)						\
+	__INIT_WORK((_work), (_func), 0)
 
-#define INIT_WORK_ONSTACK(_work, _func)				\
-	do {							\
-		__INIT_WORK((_work), (_func), 1);		\
-	} while (0)
+#define INIT_WORK_ONSTACK(_work, _func)					\
+	__INIT_WORK((_work), (_func), 1)
 
 #define INIT_DELAYED_WORK(_work, _func)				\
 	do {							\
