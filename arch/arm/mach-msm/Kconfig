@@ -2891,9 +2891,9 @@ config FORCE_FAST_CHARGE
 		are detected as USB to charge as AC.
 
 config MSM_SLEEPER
-	bool "Limit max frequency while screen is off"
+	bool "CPU hotplug driver"
 	default y
 	help
-	  Limit max frequency while screen is off 
+	  CPU hotplug driver 
 
 endif
