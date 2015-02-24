@@ -143,5 +143,4 @@ static inline int evgen_execute(struct input_dev *input,
 
 	return rc;
 }
-
 #endif /* __LINUX_INPUT_EVGEN_HELPER_H__ */
