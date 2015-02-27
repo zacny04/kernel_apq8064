@@ -83,7 +83,6 @@
 #include <mach/mdm2.h>
 #include <mach/mdm-peripheral.h>
 #include <mach/msm_rtb.h>
-#include <mach/msm_cache_dump.h>
 #include <mach/scm.h>
 #include <mach/iommu_domains.h>
 
@@ -790,19 +789,6 @@ static void __init reserve_mdp_memory(void)
 	msm8960_mdp_writeback(msm8960_reserve_table);
 }
 
-static void __init reserve_cache_dump_memory(void)
-{
-#ifdef CONFIG_MSM_CACHE_DUMP
-	unsigned int total;
-
-	total = msm8960_cache_dump_pdata.l1_size +
-		msm8960_cache_dump_pdata.l2_size;
-	msm8960_reserve_table[MEMTYPE_EBI1].size += total;
-	pr_info("mem_map: cache_dump reserved with size 0x%x in pool\n",
-			total);
-#endif
-}
-
 static void __init msm8960_calculate_reserve_sizes(void)
 {
 	size_pmem_devices();
@@ -810,7 +796,6 @@ static void __init msm8960_calculate_reserve_sizes(void)
 	reserve_ion_memory();
 	reserve_mdp_memory();
 	reserve_rtb_memory();
-	reserve_cache_dump_memory();
 }
 
 static struct reserve_info msm8960_reserve_info __initdata = {
@@ -2932,7 +2917,6 @@ static struct platform_device *common_devices[] __initdata = {
 	&msm8960_device_cache_erp,
 	&msm8960_device_ebi1_ch0_erp,
 	&msm8960_device_ebi1_ch1_erp,
-	&msm8960_cache_dump_device,
 	&msm8960_iommu_domain_device,
 	&msm_tsens_device,
 	&msm8960_pc_cntr,

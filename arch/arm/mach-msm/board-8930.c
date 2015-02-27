@@ -83,7 +83,6 @@
 #include <mach/mdm2.h>
 #include <mach/msm_rtb.h>
 #include <linux/fmem.h>
-#include <mach/msm_cache_dump.h>
 
 #include <mach/kgsl.h>
 #ifdef CONFIG_INPUT_MPU3050
@@ -721,21 +720,6 @@ static void __init reserve_mdp_memory(void)
 	msm8930_mdp_writeback(msm8930_reserve_table);
 }
 
-#ifdef CONFIG_MSM_CACHE_DUMP
-static void __init reserve_cache_dump_memory(void)
-{
-	unsigned int total;
-
-	total = msm8930_cache_dump_pdata.l1_size +
-		msm8930_cache_dump_pdata.l2_size;
-	msm8930_reserve_table[MEMTYPE_EBI1].size += total;
-	pr_info("mem_map: cache_dump reserved with size 0x%x in pool\n",
-			total);
-}
-#else
-static void __init reserve_cache_dump_memory(void) { }
-#endif
-
 static void __init msm8930_calculate_reserve_sizes(void)
 {
 	size_pmem_devices();
@@ -743,7 +727,6 @@ static void __init msm8930_calculate_reserve_sizes(void)
 	reserve_ion_memory();
 	reserve_mdp_memory();
 	reserve_rtb_memory();
-	reserve_cache_dump_memory();
 }
 
 static struct reserve_info msm8930_reserve_info __initdata = {
@@ -2134,7 +2117,7 @@ static struct i2c_board_info mxt_device_info_8930[] __initdata = {
 	},
 };
 
-/*»     Synaptics Thin Driver»  */
+/*\BB     Synaptics Thin Driver\BB  */
 
 #define CLEARPAD3202_ADDR 0x20
 #define CLEARPAD3202_ATTEN_GPIO (11)
@@ -2555,7 +2538,6 @@ static struct platform_device *common_devices[] __initdata = {
 	&msm8960_device_cache_erp,
 	&msm8930_iommu_domain_device,
 	&msm_tsens_device,
-	&msm8930_cache_dump_device,
 	&msm8930_pc_cntr,
 	&msm8930_cpu_slp_status,
 };

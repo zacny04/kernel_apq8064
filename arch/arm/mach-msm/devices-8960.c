@@ -35,7 +35,6 @@
 #include <mach/msm_smd.h>
 #include <mach/msm_dcvs.h>
 #include <mach/msm_rtb.h>
-#include <mach/msm_cache_dump.h>
 #include <mach/clk-provider.h>
 #include <sound/msm-dai-q6.h>
 #include <sound/apr_audio.h>
@@ -4537,19 +4536,6 @@ struct platform_device msm8960_rtb_device = {
  * size to store other dump information
  */
 #define MSM_8960_L2_SIZE  SZ_4M
-
-struct msm_cache_dump_platform_data msm8960_cache_dump_pdata = {
-	.l2_size = MSM_8960_L2_SIZE,
-	.l1_size = MSM_8960_L1_SIZE,
-};
-
-struct platform_device msm8960_cache_dump_device = {
-	.name           = "msm_cache_dump",
-	.id             = -1,
-	.dev            = {
-		.platform_data = &msm8960_cache_dump_pdata,
-	},
-};
 
 struct dev_avtimer_data dev_avtimer_pdata = {
 	.avtimer_msw_phy_addr = AVTIMER_MSW_PHYSICAL_ADDRESS,

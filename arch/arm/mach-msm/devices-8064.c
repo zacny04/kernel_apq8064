@@ -50,7 +50,6 @@
 #include "board-8064.h"
 #include <mach/mpm.h>
 #include <mach/iommu_domains.h>
-#include <mach/msm_cache_dump.h>
 
 /* Address of GSBI blocks */
 #define MSM_GSBI1_PHYS		0x12440000
@@ -3557,16 +3556,3 @@ struct platform_device apq8064_rtb_device = {
  * size to store other dump information
  */
 #define APQ8064_L2_SIZE  SZ_8M
-
-struct msm_cache_dump_platform_data apq8064_cache_dump_pdata = {
-	.l2_size = APQ8064_L2_SIZE,
-	.l1_size = APQ8064_L1_SIZE,
-};
-
-struct platform_device apq8064_cache_dump_device = {
-	.name           = "msm_cache_dump",
-	.id             = -1,
-	.dev            = {
-		.platform_data = &apq8064_cache_dump_pdata,
-	},
-};
