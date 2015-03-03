@@ -431,6 +431,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 	pcpu->prev_load = cpu_load;
 	boosted = boost_val || now < boostpulse_endtime;
 
+	// HACK HACK HACK BEGIN
 	if (counter < 5) {
 		counter++;
 		if (counter > 2) {
