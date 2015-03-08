@@ -1,9 +1,9 @@
 language: c
 env:
-  - ARCH=arm SUBARCH=arm CROSS_COMPILE=arm-eabi-
+  - ARCH=arm SUBARCH=arm CROSS_COMPILE=arm-cortex_a15-linux-gnueabihf-
 before_install:
-  - git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.8
-  - export PATH=$(pwd)/arm-eabi-4.8/bin:$PATH
+  - git clone --depth=50 https://github.com/Christopher83/arm-cortex_a15-linux-gnueabihf-linaro_4.9
+  - export PATH=$(pwd)/arm-cortex_a15-linux-gnueabihf-linaro_4.9/bin:$PATH
 before_script:
   - make fusion3_yuga_defconfig
 script:
