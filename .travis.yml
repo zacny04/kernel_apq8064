@@ -1,0 +1,10 @@
+language: c
+env:
+  - ARCH=arm SUBARCH=arm CROSS_COMPILE=arm-eabi-
+before_install:
+  - git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.8
+  - export PATH=$(pwd)/arm-eabi-4.8/bin:$PATH
+before_script:
+  - make fusion3_yuga_defconfig
+script:
+  - make -j$(grep -c '^processor' /proc/cpuinfo)
