@@ -1683,6 +1683,13 @@ config ASMP
 	  Automatically hotplugs the multiple cpu cores on and off
 	  based on cpu load and suspend state
 
+config APQ_HOTPLUG
+	bool "Multicore hotplug driver"
+	depends on FB_MSM_MDSS
+	default y
+	help
+	  Hotplug CPUs on suspend/resume
+
 config SCHED_SMT
 	bool "SMT scheduler support"
 	depends on ARM_CPU_TOPOLOGY
