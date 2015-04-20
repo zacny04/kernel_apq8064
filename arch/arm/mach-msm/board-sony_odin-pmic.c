@@ -635,7 +635,6 @@ static struct gpio_keys_button odin_sp1_keys[] = {
 		.desc           = "cam_focus_key",
 		.active_low     = 1,
 		.type		= EV_KEY,
-		.wakeup		= 1,
 		.debounce_interval = 15,
 	},
 	{
@@ -674,7 +673,6 @@ static struct gpio_keys_button odin_sp11_keys[] = {
 		.desc           = "cam_focus_key",
 		.active_low     = 1,
 		.type		= EV_KEY,
-		.wakeup		= 1,
 		.debounce_interval = 15,
 	},
 	{

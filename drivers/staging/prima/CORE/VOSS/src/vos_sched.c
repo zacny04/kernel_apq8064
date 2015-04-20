@@ -647,31 +647,6 @@ int isWDresetInProgress(void)
       return 0;
    }
 }
-
-v_BOOL_t isSsrPanicOnFailure(void)
-{
-    hdd_context_t *pHddCtx = NULL;
-    v_CONTEXT_t pVosContext = NULL;
-
-    /* Get the Global VOSS Context */
-    pVosContext = vos_get_global_context(VOS_MODULE_ID_SYS, NULL);
-    if(!pVosContext)
-    {
-      hddLog(VOS_TRACE_LEVEL_FATAL,"%s: Global VOS context is Null", __func__);
-      return FALSE;
-    }
-
-    /* Get the HDD context */
-    pHddCtx = (hdd_context_t *)vos_get_context(VOS_MODULE_ID_HDD, pVosContext);
-    if((NULL == pHddCtx) || (NULL == pHddCtx->cfg_ini))
-    {
-      hddLog(VOS_TRACE_LEVEL_FATAL,"%s: HDD context is Null", __func__);
-      return FALSE;
-    }
-
-    return (pHddCtx->cfg_ini->fIsSsrPanicOnFailure);
-}
-
 /*---------------------------------------------------------------------------
   \brief VosWdThread() - The VOSS Watchdog thread
   The \a VosWdThread() is the Watchdog thread:
@@ -821,11 +796,7 @@ VosWDThread
           VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
                   "%s: Failed to re-init WLAN",__func__);
           VOS_ASSERT(0);
-          pWdContext->isFatalError = true;
-        }
-        else
-        {
-          pWdContext->isFatalError = false;
+          goto err_reset;
         }
         pWdContext->resetInProgress = false;
         complete(&pHddCtx->ssr_comp_var);
@@ -1853,14 +1824,6 @@ VOS_STATUS vos_watchdog_wlan_shutdown(void)
     v_CONTEXT_t pVosContext = NULL;
     hdd_context_t *pHddCtx = NULL;
 
-    if (gpVosWatchdogContext->isFatalError)
-    {
-       /* If we hit this, it means wlan driver is in bad state and needs
-       * driver unload and load.
-       */
-       return VOS_STATUS_E_FAILURE;
-    }
-
     VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
         "%s: WLAN driver is shutting down ", __func__);
     if (NULL == gpVosWatchdogContext)
@@ -1902,7 +1865,15 @@ VOS_STATUS vos_watchdog_wlan_shutdown(void)
         /* Release the lock here */
         spin_unlock(&gpVosWatchdogContext->wdLock);
         return VOS_STATUS_E_FAILURE;
-    }
+    } 
+
+    /* Set the flags so that all future CMD53 and Wext commands get blocked right away */
+    vos_set_logp_in_progress(VOS_MODULE_ID_VOSS, TRUE);
+    vos_set_reinit_in_progress(VOS_MODULE_ID_VOSS, FALSE);
+    pHddCtx->isLogpInProgress = TRUE;
+
+    /* Release the lock here */
+    spin_unlock(&gpVosWatchdogContext->wdLock);
 
     if (pHddCtx->isLoadUnloadInProgress)
     {
@@ -1912,21 +1883,11 @@ VOS_STATUS vos_watchdog_wlan_shutdown(void)
         /* wcnss has crashed, and SSR has alredy been started by Kernel driver.
          * So disable SSR from WLAN driver */
         hdd_set_ssr_required( HDD_SSR_DISABLED );
-        /* Release the lock here before returning */
-        spin_unlock(&gpVosWatchdogContext->wdLock);
         return VOS_STATUS_E_FAILURE;
     }
-    /* Set the flags so that all commands from userspace get blocked right away */
-    vos_set_logp_in_progress(VOS_MODULE_ID_VOSS, TRUE);
-    vos_set_reinit_in_progress(VOS_MODULE_ID_VOSS, FALSE);
-    pHddCtx->isLogpInProgress = TRUE;
-
-    /* Release the lock here */
-    spin_unlock(&gpVosWatchdogContext->wdLock);
-
     /* Update Riva Reset Statistics */
     pHddCtx->hddRivaResetStats++;
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_POWERSUSPEND
     if(VOS_STATUS_SUCCESS != hdd_wlan_reset_initialization())
     {
        VOS_ASSERT(0);

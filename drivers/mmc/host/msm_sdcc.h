@@ -10,6 +10,9 @@
  * published by the Free Software Foundation.
  *
  * - Based on mmci.h
+ *
+ * NOTE: This file has been modified by Sony Mobile Communications AB.
+ * Modifications are licensed under the License.
  */
 
 #ifndef _MSM_SDCC_H
@@ -26,7 +29,7 @@
 #include <linux/scatterlist.h>
 #include <linux/dma-mapping.h>
 #include <linux/wakelock.h>
-#include <linux/earlysuspend.h>
+#include <linux/powersuspend.h>
 #include <linux/pm_qos.h>
 #include <mach/sps.h>
 
@@ -381,8 +384,8 @@ struct msmsdcc_host {
 	struct msmsdcc_sps_data sps;
 	struct msmsdcc_pio_data	pio;
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	struct early_suspend early_suspend;
+#ifdef CONFIG_POWERSUSPEND
+	struct power_suspend power_suspend;
 	int polling_enabled;
 #endif
 

@@ -63,7 +63,6 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/wireless.h>
-#include <linux/ratelimit.h>
 #include <wlan_hdd_includes.h>
 #include <wlan_btc_svc.h>
 #include <wlan_nlink_common.h>
@@ -90,8 +89,8 @@
 #include "wlan_hdd_tdls.h"
 #endif
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
 #endif
 #include "wlan_hdd_power.h"
 #include "qwlan_version.h"
@@ -102,7 +101,6 @@
 #include "wlan_hdd_packet_filtering.h"
 #endif
 
-#include <linux/wireless.h>
 #include <net/cfg80211.h>
 #include "wlan_qct_pal_trace.h"
 #include "wlan_qct_tl.h"
@@ -115,13 +113,9 @@
 #include "sme_Api.h"
 #include "vos_trace.h"
 
-#ifdef DEBUG_ROAM_DELAY
-#include "vos_utils.h"
-#endif
-
-#ifdef CONFIG_HAS_EARLYSUSPEND
-extern void hdd_suspend_wlan(struct early_suspend *wlan_suspend);
-extern void hdd_resume_wlan(struct early_suspend *wlan_suspend);
+#ifdef CONFIG_POWERSUSPEND
+extern void hdd_suspend_wlan(struct power_suspend *wlan_suspend);
+extern void hdd_resume_wlan(struct power_suspend *wlan_suspend);
 #endif
 
 #ifdef FEATURE_OEM_DATA_SUPPORT
@@ -218,11 +212,6 @@ static const hdd_freq_chan_map_t freq_chan_map[] = { {2412, 1}, {2417, 2},
 #define WE_ENABLE_DXE_STALL_DETECT 6
 #define WE_DISPLAY_DXE_SNAP_SHOT   7
 #define WE_DISPLAY_DATAPATH_SNAP_SHOT    9
-
-#ifdef DEBUG_ROAM_DELAY
-#define WE_DUMP_ROAM_TIMER_LOG     10
-#define WE_RESET_ROAM_TIMER_LOG    11
-#endif
 
 /* Private ioctls and their sub-ioctls */
 #define WLAN_PRIV_SET_VAR_INT_GET_NONE   (SIOCIWFIRSTPRIV + 7)
@@ -348,13 +337,6 @@ static const hdd_freq_chan_map_t freq_chan_map[] = { {2412, 1}, {2417, 2},
 #define TX_PER_TRACKING_DEFAULT_RATIO             5
 #define TX_PER_TRACKING_MAX_RATIO                10
 #define TX_PER_TRACKING_DEFAULT_WATERMARK         5
-
-#define HDD_IOCTL_RATELIMIT_INTERVAL 20*HZ
-#define HDD_IOCTL_RATELIMIT_BURST 1
-
-static DEFINE_RATELIMIT_STATE(hdd_ioctl_timeout_rs, \
-        HDD_IOCTL_RATELIMIT_INTERVAL,     \
-        HDD_IOCTL_RATELIMIT_BURST);
 
 /*MCC Configuration parameters */
 enum {
@@ -3785,23 +3767,22 @@ static int iw_setint_getnone(struct net_device *dev, struct iw_request_info *inf
     hdd_adapter_t *pAdapter = WLAN_HDD_GET_PRIV_PTR(dev);
     tHalHandle hHal = WLAN_HDD_GET_HAL_CTX(pAdapter);
     hdd_wext_state_t  *pWextState =  WLAN_HDD_GET_WEXT_STATE_PTR(pAdapter);
-    hdd_context_t *pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
     int *value = (int *)extra;
     int sub_cmd = value[0];
     int set_value = value[1];
     int ret = 0; /* success */
     int enable_pbm, enable_mp;
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_POWERSUSPEND
     v_U8_t nEnableSuspendOld;
 #endif
+    INIT_COMPLETION(pWextState->completion_var);
 
-    if (0 != wlan_hdd_validate_context(pHddCtx))
+    if ((WLAN_HDD_GET_CTX(pAdapter))->isLogpInProgress)
     {
-        hddLog(VOS_TRACE_LEVEL_ERROR, FL("HDD context is not valid"));
+        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
+                                  "%s:LOGP in Progress. Ignore!!!", __func__);
         return -EBUSY;
     }
-
-    INIT_COMPLETION(pWextState->completion_var);
 
     switch(sub_cmd)
     {
@@ -3955,7 +3936,7 @@ static int iw_setint_getnone(struct net_device *dev, struct iw_request_info *inf
                  sme_DisablePowerSave(hHal, ePMC_STANDBY_MODE_POWER_SAVE);
                  break;
               case  8: //Request Standby
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_POWERSUSPEND
 #endif
                  break;
               case  9: //Start Auto Bmps Timer
@@ -3964,23 +3945,23 @@ static int iw_setint_getnone(struct net_device *dev, struct iw_request_info *inf
               case  10://Stop Auto BMPS Timer
                  sme_StopAutoBmpsTimer(hHal);
                  break;
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_POWERSUSPEND
               case  11://suspend to standby
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_POWERSUSPEND
                  nEnableSuspendOld = (WLAN_HDD_GET_CTX(pAdapter))->cfg_ini->nEnableSuspend;
                  (WLAN_HDD_GET_CTX(pAdapter))->cfg_ini->nEnableSuspend = 1;
                  (WLAN_HDD_GET_CTX(pAdapter))->cfg_ini->nEnableSuspend = nEnableSuspendOld;
 #endif
                  break;
               case  12://suspend to deep sleep
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_POWERSUSPEND
                  nEnableSuspendOld = (WLAN_HDD_GET_CTX(pAdapter))->cfg_ini->nEnableSuspend;
                  (WLAN_HDD_GET_CTX(pAdapter))->cfg_ini->nEnableSuspend = 2;
                  (WLAN_HDD_GET_CTX(pAdapter))->cfg_ini->nEnableSuspend = nEnableSuspendOld;
 #endif
                  break;
               case  13://resume from suspend
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_POWERSUSPEND
 #endif
                  break;
 #endif
@@ -4249,10 +4230,8 @@ static int iw_setnone_getint(struct net_device *dev, struct iw_request_info *inf
 
     if ((WLAN_HDD_GET_CTX(pAdapter))->isLogpInProgress)
     {
-        if (__ratelimit(&hdd_ioctl_timeout_rs)) {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
+        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
                                   "%s:LOGP in Progress. Ignore!!!", __func__);
-        }
         return -EBUSY;
     }
 
@@ -4752,19 +4731,7 @@ static int iw_setnone_getnone(struct net_device *dev, struct iw_request_info *in
             WLANTL_TLDebugMessage(VOS_TRUE);
             break;
         }
-#ifdef DEBUG_ROAM_DELAY
-        case WE_DUMP_ROAM_TIMER_LOG:
-        {
-            vos_dump_roam_time_log_service();
-            break;
-        }
 
-        case WE_RESET_ROAM_TIMER_LOG:
-        {
-            vos_reset_roam_timer_log();
-            break;
-        }
-#endif
         default:
         {
             hddLog(LOGE, "%s: unknown ioctl %d", __func__, sub_cmd);
@@ -6848,8 +6815,7 @@ int hdd_setBand_helper(struct net_device *dev, tANI_U8* ptr)
                         * then change the band*/
 
              hddLog(VOS_TRACE_LEVEL_INFO,
-                     "%s STA connected in band %u, Changing band to %u, Issuing Disconnect."
-                     " Set HDD connState to eConnectionState_NotConnected",
+                     "%s STA connected in band %u, Changing band to %u, Issuing Disconnect",
                         __func__, csrGetCurrentBand(hHal), band);
 
              pHddStaCtx->conn_info.connState = eConnectionState_NotConnected;
@@ -7450,18 +7416,7 @@ static const struct iw_priv_args we_private_args[] = {
         0,
         0,
         "dataSnapshot"},
-#ifdef DEBUG_ROAM_DELAY
-    {
-        WE_DUMP_ROAM_TIMER_LOG,
-        0,
-        0,
-        "dumpRoamDelay" },
-    {
-        WE_RESET_ROAM_TIMER_LOG,
-        0,
-        0,
-        "resetRoamDelay" },
-#endif
+
     /* handlers for main ioctl */
     {   WLAN_PRIV_SET_VAR_INT_GET_NONE,
         IW_PRIV_TYPE_INT | MAX_VAR_ARGS,
@@ -7931,12 +7886,7 @@ int hdd_UnregisterWext(struct net_device *dev)
 
    EXIT();
 #endif
-
-   VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,"In %s", __func__);
-   rtnl_lock();
    dev->wireless_handlers = NULL;
-   rtnl_unlock();
-
    return 0;
 }
 

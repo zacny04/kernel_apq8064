@@ -17,6 +17,9 @@
 #include "xattr.h"
 #include "acl.h"
 
+#define get_inode_mode(i)	((is_inode_flag_set(F2FS_I(i), FI_ACL_MODE)) ? \
+					(F2FS_I(i)->i_acl_mode) : ((i)->i_mode))
+
 static inline size_t f2fs_acl_size(int count)
 {
 	if (count <= 4) {
@@ -62,7 +65,7 @@ static struct posix_acl *f2fs_acl_from_disk(const char *value, size_t size)
 	if (count == 0)
 		return NULL;
 
-	acl = posix_acl_alloc(count, GFP_NOFS);
+	acl = posix_acl_alloc(count, GFP_KERNEL);
 	if (!acl)
 		return ERR_PTR(-ENOMEM);
 
@@ -108,7 +111,7 @@ static void *f2fs_acl_to_disk(const struct posix_acl *acl, size_t *size)
 	int i;
 
 	f2fs_acl = kmalloc(sizeof(struct f2fs_acl_header) + acl->a_count *
-			sizeof(struct f2fs_acl_entry), GFP_NOFS);
+			sizeof(struct f2fs_acl_entry), GFP_KERNEL);
 	if (!f2fs_acl)
 		return ERR_PTR(-ENOMEM);
 
@@ -146,8 +149,7 @@ fail:
 	return ERR_PTR(-EINVAL);
 }
 
-static struct posix_acl *__f2fs_get_acl(struct inode *inode, int type,
-						struct page *dpage)
+struct posix_acl *f2fs_get_acl(struct inode *inode, int type)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 	int name_index = F2FS_XATTR_INDEX_POSIX_ACL_DEFAULT;
@@ -165,13 +167,12 @@ static struct posix_acl *__f2fs_get_acl(struct inode *inode, int type,
 	if (type == ACL_TYPE_ACCESS)
 		name_index = F2FS_XATTR_INDEX_POSIX_ACL_ACCESS;
 
-	retval = f2fs_getxattr(inode, name_index, "", NULL, 0, dpage);
+	retval = f2fs_getxattr(inode, name_index, "", NULL, 0);
 	if (retval > 0) {
-		value = kmalloc(retval, GFP_F2FS_ZERO);
+		value = kmalloc(retval, GFP_KERNEL);
 		if (!value)
 			return ERR_PTR(-ENOMEM);
-		retval = f2fs_getxattr(inode, name_index, "", value,
-							retval, dpage);
+		retval = f2fs_getxattr(inode, name_index, "", value, retval);
 	}
 
 	if (retval > 0)
@@ -186,11 +187,6 @@ static struct posix_acl *__f2fs_get_acl(struct inode *inode, int type,
 		set_cached_acl(inode, type, acl);
 
 	return acl;
-}
-
-struct posix_acl *f2fs_get_acl(struct inode *inode, int type)
-{
-	return __f2fs_get_acl(inode, type, NULL);
 }
 
 static int f2fs_set_acl(struct inode *inode, int type,
@@ -234,23 +230,22 @@ static int f2fs_set_acl(struct inode *inode, int type,
 	if (acl) {
 		value = f2fs_acl_to_disk(acl, &size);
 		if (IS_ERR(value)) {
-			clear_inode_flag(fi, FI_ACL_MODE);
+			cond_clear_inode_flag(fi, FI_ACL_MODE);
 			return (int)PTR_ERR(value);
 		}
 	}
 
-	error = f2fs_setxattr(inode, name_index, "", value, size, ipage, 0);
+	error = f2fs_setxattr(inode, name_index, "", value, size, ipage);
 
 	kfree(value);
 	if (!error)
 		set_cached_acl(inode, type, acl);
 
-	clear_inode_flag(fi, FI_ACL_MODE);
+	cond_clear_inode_flag(fi, FI_ACL_MODE);
 	return error;
 }
 
-int f2fs_init_acl(struct inode *inode, struct inode *dir, struct page *ipage,
-							struct page *dpage)
+int f2fs_init_acl(struct inode *inode, struct inode *dir, struct page *ipage)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(dir->i_sb);
 	struct posix_acl *acl = NULL;
@@ -258,11 +253,12 @@ int f2fs_init_acl(struct inode *inode, struct inode *dir, struct page *ipage,
 
 	if (!S_ISLNK(inode->i_mode)) {
 		if (test_opt(sbi, POSIX_ACL)) {
-			acl = __f2fs_get_acl(dir, ACL_TYPE_DEFAULT, dpage);
+			acl = f2fs_get_acl(dir, ACL_TYPE_DEFAULT);
 			if (IS_ERR(acl))
 				return PTR_ERR(acl);
 		}
-		if (!acl)
+		if (!acl && !(test_opt(sbi, ANDROID_EMU) &&
+				F2FS_I(inode)->i_advise & FADVISE_ANDROID_EMU))
 			inode->i_mode &= ~current_umask();
 	}
 
@@ -289,7 +285,7 @@ int f2fs_acl_chmod(struct inode *inode)
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 	struct posix_acl *acl;
 	int error;
-	umode_t mode = get_inode_mode(inode);
+	mode_t mode = get_inode_mode(inode);
 
 	if (!test_opt(sbi, POSIX_ACL))
 		return 0;
@@ -307,6 +303,32 @@ int f2fs_acl_chmod(struct inode *inode)
 	error = f2fs_set_acl(inode, ACL_TYPE_ACCESS, acl, NULL);
 	posix_acl_release(acl);
 	return error;
+}
+
+int f2fs_android_emu(struct f2fs_sb_info *sbi, struct inode *inode,
+		u32 *uid, u32 *gid, umode_t *mode)
+{
+	F2FS_I(inode)->i_advise |= FADVISE_ANDROID_EMU;
+
+	if (uid)
+		*uid = sbi->android_emu_uid;
+	if (gid)
+		*gid = sbi->android_emu_gid;
+	if (mode) {
+		*mode = (*mode & ~S_IRWXUGO) | sbi->android_emu_mode;
+		if (F2FS_I(inode)->i_advise & FADVISE_ANDROID_EMU_ROOT)
+			*mode &= ~S_IRWXO;
+		if (S_ISDIR(*mode)) {
+			if (*mode & S_IRUSR)
+				*mode |= S_IXUSR;
+			if (*mode & S_IRGRP)
+				*mode |= S_IXGRP;
+			if (*mode & S_IROTH)
+				*mode |= S_IXOTH;
+		}
+	}
+
+	return 0;
 }
 
 static size_t f2fs_xattr_list_acl(struct dentry *dentry, char *list,

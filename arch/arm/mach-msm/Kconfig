@@ -1003,8 +1003,6 @@ config MACH_MSM_DUMMY
 
 endmenu
 
-source "arch/arm/mach-msm/lge/Kconfig"
-
 config MSM_STACKED_MEMORY
 	bool "Stacked Memory"
 	default y
@@ -1326,15 +1324,6 @@ config MSM_FIQ_SUPPORT
 	default y
 	bool "Enable installation of an FIQ handler."
 
-config ARM_AUTO_HOTPLUG
-	bool "Auto hotplugging based on scheduler runqueue load for ARM SoCs"
-	depends on HOTPLUG_CPU
-	depends on ARCH_EXYNOS4 || ARCH_TEGRA || ARCH_MSM_SCORPIONMP || \
-	ARCH_MSM_KRAITMP
-	depends on !TEGRA_AUTO_HOTPLUG && !CPU_FREQ_GOV_PEGASUSQ && \
-	!CPU_FREQ_GOV_HOTPLUG && !MSM_MPDEC
-	default y
-
 config MSM_SERIAL_DEBUGGER
 	select MSM_FIQ_SUPPORT
 	select KERNEL_DEBUGGER_CORE
@@ -1393,7 +1382,7 @@ config MSM_PCIE
 
 config MSM_SMD_DEBUG
 	depends on MSM_SMD
-	default y
+	default n
 	bool "MSM SMD debug support"
 	help
 	  Support for debugging the SMD for communication
@@ -1434,7 +1423,7 @@ config MSM_RESET_MODEM
 
 config MSM_SMD_LOGGING
 	depends on MSM_SMD
-	default y
+	default n
 	bool "MSM Shared Memory Logger"
 	help
 	  This option exposes the shared memory logger at /dev/smem_log
@@ -1552,7 +1541,7 @@ config MSM_IPC_ROUTER_SECURITY
 
 config MSM_ONCRPCROUTER_DEBUG
 	depends on MSM_ONCRPCROUTER
-	default y
+	default n
 	bool "MSM debug ONCRPC router support"
 	help
 	  Support for debugging the ONCRPC router for communication
@@ -1665,25 +1654,13 @@ config MSM_CPU_FREQ_MIN
 	depends on MSM_CPU_FREQ_SET_MIN_MAX
 	default 245760
 
-endif # CPU_FREQ_MSM
-
 config CPU_VOLTAGE_TABLE
 	bool "Enable CPU Voltage Table via sysfs for adjustements"
 	default n
 	help
 	  Krait User Votlage Control
 
-config MSM_SLEEPER
-	bool "Limit max frequency while screen is off"
-	default y
-	help
-	  Limit max frequency while screen is off. 
-	  
-config GPU_OVERCLOCK
-	bool "Enable GPU Overclocking option"
-	default n
-	help
-	  GPU OC to 487.5Mhz
+endif # CPU_FREQ_MSM
 
 config MSM_AVS_HW
 	bool "Enable Adaptive Voltage Scaling (AVS)"
@@ -1792,13 +1769,6 @@ config MSM_VREG_SWITCH_INVERTED
 	default n
 	help
 	  Reverses the enable and disable for vreg switch.
-
-config MSM_DMA_TEST
-	tristate "MSM DMA test module"
-	default m
-	help
-	  Intended to be compiled as a module.  Provides a device node
-	  and ioctls for testing the MSM dma system.
 
 config WIFI_CONTROL_FUNC
 	bool "Enable WiFi control function abstraction"
@@ -2278,14 +2248,6 @@ config MSM_ETM
 config MSM_SLEEP_STATS_DEVICE
 	bool "Enable exporting of MSM sleep device stats to userspace"
 
-config MSM_RUN_QUEUE_STATS
-	bool "Enable collection and exporting of MSM Run Queue stats to userspace"
-	depends on (MSM_SOC_REV_A || ARCH_MSM8X60 || ARCH_MSM8960)
-	help
-	 This option enalbes statistics collection on Run Queue. A daemon
-         in user mode, called MPDecision will be using this data to decide
-         on when to switch off/on the other cores.
-
 config MSM_STANDALONE_POWER_COLLAPSE
        bool "Enable standalone power collapse"
        default n
@@ -2630,15 +2592,6 @@ config MSM_L2_ERP_2BIT_PANIC
 	  For production builds, it may be acceptable to say 'N' here, since
 	  an uncorrectable error might not necessarily cause further problems.
 
-config MSM_DCVS
-	bool "Use MSM DCVS for CPU/GPU Frequency control"
-	depends on MSM_SCM
-	help
-	  Enable support for MSM DCVS to control all CPU and GPU core frequencies.
-	  The DCVS manager allows idle driver to feed the idle information to the
-	  algorithm and the algorithm returns a frequency for the core which is
-	  passed to the frequency change driver.
-
 config RTC_SEMC_ETS
 	bool "SEMC ETS RTC flag"
 	default n
@@ -2908,18 +2861,6 @@ config MSM_MODEM_SUBSYSTEM_RESTART_MONITOR
 	help
 	  This option enables a module which can notify user-space
 	  applications of modem subsystem power up/down event via uevent.
-
-config UPDATE_LCDC_LUT
-        bool "Set initial Qualcomm LCDC lut"
-        default n
-        help
-          Set initial Qualcomm LCDC Look Up Table.
-
-config LCD_KCAL_STANDALONE
-        tristate "MSM generic LCDC Calibration"
-        default n
-        help
-          Enable MSM generic LCDC temperature Calibration.
 
 config FORCE_FAST_CHARGE
 	bool "Force AC charge mode at will"

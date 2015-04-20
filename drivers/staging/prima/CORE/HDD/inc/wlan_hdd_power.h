@@ -82,7 +82,7 @@
  VOS_STATUS hdd_enter_standby(hdd_context_t *pHddCtx);
  VOS_STATUS hdd_enter_deep_sleep(hdd_context_t *pHddCtx, 
                                 hdd_adapter_t* pAdapter);
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_POWERSUSPEND
  VOS_STATUS hdd_wlan_reset(void);
  VOS_STATUS hdd_wlan_reset_initialization(void) ;
 #endif
@@ -104,11 +104,4 @@ void hdd_conf_gtk_offload(hdd_adapter_t *pAdapter, v_BOOL_t fenable);
 #ifdef WLAN_NS_OFFLOAD
 void hdd_conf_ns_offload(hdd_adapter_t *pAdapter, int fenable);
 #endif
-
-int wlan_hdd_ipv4_changed(struct notifier_block *nb,
-                           unsigned long data, void *arg);
-int wlan_hdd_ipv6_changed(struct notifier_block *nb,
-                           unsigned long data, void *arg);
-
-
 #endif // if !defined __WLAN_QCT_DRIVER_H

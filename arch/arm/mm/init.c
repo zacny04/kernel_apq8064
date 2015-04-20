@@ -2,10 +2,14 @@
  *  linux/arch/arm/mm/init.c
  *
  *  Copyright (C) 1995-2005 Russell King
+ *  Copyright (C) 2013 Sony Mobile Communications AB.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
+ *
+ * NOTE: This file has been modified by Sony Mobile Communications AB.
+ * Modifications are licensed under the License.
  */
 #include <linux/kernel.h>
 #include <linux/errno.h>
@@ -103,6 +107,9 @@ void show_mem(unsigned int filter)
 
 	printk("Mem-info:\n");
 	show_free_areas(filter);
+
+	if (filter & SHOW_MEM_FILTER_PAGE_COUNT)
+		return;
 
 	for_each_bank (i, mi) {
 		struct membank *bank = &mi->bank[i];
