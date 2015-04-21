@@ -38,6 +38,7 @@
 #include <mach/msm_smd.h>
 #include <mach/msm_dcvs.h>
 #include <mach/msm_rtb.h>
+#include <mach/msm_tsif.h>
 #include <linux/msm_ion.h>
 #include "clock.h"
 #include "pm.h"
@@ -3090,19 +3091,11 @@ static struct msm_dcvs_core_info apq8064_core_info = {
 	}
 };
 
-static int apq8064_LPM_latency = 1000; /* >100 usec for WFI */
-
-struct platform_device apq8064_cpu_idle_device = {
-	.name   = "msm_cpu_idle",
-	.id     = -1,
-	.dev = {
-		.platform_data = &apq8064_LPM_latency,
-	},
-};
+#define APQ8064_LPM_LATENCY  1000 /* >100 usec for WFI */
 
 static struct msm_gov_platform_data gov_platform_data = {
 	.info = &apq8064_core_info,
-	.latency = 1000, /* equal to apq8064_LPM_latency */
+	.latency = APQ8064_LPM_LATENCY,
 };
 
 struct platform_device apq8064_msm_gov_device = {

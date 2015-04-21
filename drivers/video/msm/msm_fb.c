@@ -58,10 +58,6 @@
 #define MSM_FB_NUM	3
 #endif
 
-#ifdef CONFIG_POWERSUSPEND
-#undef CONFIG_POWERSUSPEND
-#endif
-
 static unsigned char *fbram;
 static unsigned char *fbram_phys;
 static int fbram_size;
@@ -395,7 +391,7 @@ static void msm_fb_shutdown(struct platform_device *pdev)
                return;
        }
        lock_fb_info(mfd->fbi);
-		msm_fb_release_all(mfd->fbi, true);
+       msm_fb_release_all(mfd->fbi, true);
        unlock_fb_info(mfd->fbi);
 }
 static int msm_fb_probe(struct platform_device *pdev)
@@ -573,7 +569,7 @@ static int msm_fb_remove(struct platform_device *pdev)
 	return 0;
 }
 
-#if defined(CONFIG_PM) && !defined(CONFIG_POWERSUSPEND)
+#if defined(CONFIG_PM) && !defined(CONFIG_HAS_EARLYSUSPEND)
 static int msm_fb_suspend(struct platform_device *pdev, pm_message_t state)
 {
 	struct msm_fb_data_type *mfd;
@@ -705,7 +701,7 @@ static int msm_fb_resume_sub(struct msm_fb_data_type *mfd)
 }
 #endif
 
-#if defined(CONFIG_PM) && !defined(CONFIG_POWERSUSPEND)
+#if defined(CONFIG_PM) && !defined(CONFIG_HAS_EARLYSUSPEND)
 static int msm_fb_resume(struct platform_device *pdev)
 {
 	/* This resume function is called when interrupt is enabled.
@@ -831,7 +827,7 @@ static struct dev_pm_ops msm_fb_dev_pm_ops = {
 static struct platform_driver msm_fb_driver = {
 	.probe = msm_fb_probe,
 	.remove = msm_fb_remove,
-#ifndef CONFIG_POWERSUSPEND
+#ifndef CONFIG_HAS_EARLYSUSPEND
 	.suspend = msm_fb_suspend,
 	.resume = msm_fb_resume,
 #endif
@@ -843,7 +839,7 @@ static struct platform_driver msm_fb_driver = {
 		   },
 };
 
-#if defined(CONFIG_POWERSUSPEND) && defined(CONFIG_FB_MSM_MDP303)
+#if defined(CONFIG_HAS_EARLYSUSPEND) && defined(CONFIG_FB_MSM_MDP303)
 static void memset32_io(u32 __iomem *_ptr, u32 val, size_t count)
 {
 	count >>= 2;
@@ -852,11 +848,11 @@ static void memset32_io(u32 __iomem *_ptr, u32 val, size_t count)
 }
 #endif
 
-#ifdef CONFIG_POWERSUSPEND
-static void msmfb_power_suspend(struct power_suspend *h)
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static void msmfb_early_suspend(struct early_suspend *h)
 {
 	struct msm_fb_data_type *mfd = container_of(h, struct msm_fb_data_type,
-						power_suspend);
+						early_suspend);
 	struct msm_fb_panel_data *pdata = NULL;
 
 	msm_fb_pan_idle(mfd);
@@ -894,10 +890,10 @@ static void msmfb_power_suspend(struct power_suspend *h)
 	}
 }
 
-static void msmfb_power_resume(struct power_suspend *h)
+static void msmfb_early_resume(struct early_suspend *h)
 {
 	struct msm_fb_data_type *mfd = container_of(h, struct msm_fb_data_type,
-						power_suspend);
+						early_suspend);
 	struct msm_fb_panel_data *pdata = NULL;
 
 	msm_fb_pan_idle(mfd);
@@ -1690,15 +1686,21 @@ static int msm_fb_register(struct msm_fb_data_type *mfd)
 	mfd->index, fbi->var.xres, fbi->var.yres, fbi->var.bits_per_pixel,
 							fbi->fix.smem_len);
 
+#ifdef CONFIG_UPDATE_LCDC_LUT
+	if (msm_fb_pdata->update_lcdc_lut)
+		msm_fb_pdata->update_lcdc_lut();
+#endif
+
 	ret = 0;
 
-#ifdef CONFIG_POWERSUSPEND
+#ifdef CONFIG_HAS_EARLYSUSPEND
 
 	if (hdmi_prim_display ||
 	    (mfd->panel_info.type != DTV_PANEL)) {
-		mfd->power_suspend.suspend = msmfb_power_suspend;
-		mfd->power_suspend.resume = msmfb_power_resume;
-		register_power_suspend(&mfd->power_suspend);
+		mfd->early_suspend.suspend = msmfb_early_suspend;
+		mfd->early_suspend.resume = msmfb_early_resume;
+		mfd->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB - 2;
+		register_early_suspend(&mfd->early_suspend);
 	}
 #endif
 
@@ -1928,7 +1930,7 @@ static int msm_fb_release_all(struct fb_info *info, boolean is_all)
 }
 static int msm_fb_release(struct fb_info *info, int user)
 {
-	return msm_fb_release_all(info, false);
+        return msm_fb_release_all(info, false);
 }
 
 void msm_fb_wait_for_fence(struct msm_fb_data_type *mfd)
@@ -3850,8 +3852,8 @@ static int msmfb_handle_buf_sync_ioctl(struct msm_fb_data_type *mfd,
 	if (buf_sync->flags & MDP_BUF_SYNC_FLAG_WAIT) {
 		msm_fb_wait_for_fence(mfd);
 	}
-	if ((mfd->panel.type == MIPI_CMD_PANEL) ||
-		(mfd->panel.type == WRITEBACK_PANEL))
+	if ((mfd->panel.type == WRITEBACK_PANEL) ||
+		(mfd->panel.type == MIPI_CMD_PANEL))
 		threshold = 1;
 	else
 		threshold = 2;

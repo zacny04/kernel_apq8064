@@ -100,12 +100,22 @@ static struct scalable scalable[] __initdata = {
  * We rely on the RPM rounding requests up here.
 */
 static struct msm_bus_paths bw_level_tbl[] __initdata = {
+#ifdef CONFIG_GPU_OVERCLOCK
 	[0] =  BW_MBPS(640), /* At least  80 MHz on bus. */
 	[1] = BW_MBPS(1064), /* At least 133 MHz on bus. */
 	[2] = BW_MBPS(1600), /* At least 200 MHz on bus. */
 	[3] = BW_MBPS(2128), /* At least 266 MHz on bus. */
 	[4] = BW_MBPS(3200), /* At least 400 MHz on bus. */
 	[5] = BW_MBPS(4264), /* At least 533 MHz on bus. */
+	[6] = BW_MBPS(5290), /* At least 533 MHz on bus. */
+#else
+    [0] = BW_MBPS(640), /* At least  80 MHz on bus. */
+	[1] = BW_MBPS(1064), /* At least 133 MHz on bus. */
+	[2] = BW_MBPS(1600), /* At least 200 MHz on bus. */
+	[3] = BW_MBPS(2128), /* At least 266 MHz on bus. */
+	[4] = BW_MBPS(3200), /* At least 400 MHz on bus. */
+	[5] = BW_MBPS(4264), /* At least 533 MHz on bus. */
+#endif
 };
 
 static struct msm_bus_scale_pdata bus_scale_data __initdata = {
@@ -132,6 +142,8 @@ static struct l2_level l2_freq_tbl[] __initdata = {
 	[13] = { { 1026000, HFPLL, 1, 0x26 }, 1150000, 1150000, 5 },
 	[14] = { { 1080000, HFPLL, 1, 0x28 }, 1150000, 1150000, 5 },
 	[15] = { { 1134000, HFPLL, 1, 0x2A }, 1150000, 1150000, 5 },
+	[16] = { { 1188000, HFPLL, 1, 0x2C }, 1150000, 1150000, 5 },
+	[17] = { { 1242000, HFPLL, 1, 0x2E }, 1150000, 1150000, 5 },
 	{ }
 };
 
@@ -149,6 +161,8 @@ static struct acpu_level tbl_slow[] __initdata = {
 	{ 1, {  1350000, HFPLL, 1, 0x32 }, L2(14), 1225000 },
 	{ 1, {  1458000, HFPLL, 1, 0x36 }, L2(14), 1237500 },
 	{ 1, {  1512000, HFPLL, 1, 0x38 }, L2(14), 1250000 },
+	{ 1, {  1620000, HFPLL, 1, 0x3C }, L2(16), 1275000 },
+	{ 1, {  1728000, HFPLL, 1, 0x40 }, L2(17), 1300000 },
 	{ 0, { 0 } }
 };
 
@@ -166,6 +180,8 @@ static struct acpu_level tbl_nom[] __initdata = {
 	{ 1, {  1350000, HFPLL, 1, 0x32 }, L2(14), 1175000 },
 	{ 1, {  1458000, HFPLL, 1, 0x36 }, L2(14), 1187500 },
 	{ 1, {  1512000, HFPLL, 1, 0x38 }, L2(14), 1200000 },
+	{ 1, {  1620000, HFPLL, 1, 0x3C }, L2(16), 1225000 },
+	{ 1, {  1728000, HFPLL, 1, 0x40 }, L2(17), 1250000 },
 	{ 0, { 0 } }
 };
 
@@ -183,6 +199,8 @@ static struct acpu_level tbl_fast[] __initdata = {
 	{ 1, {  1350000, HFPLL, 1, 0x32 }, L2(14), 1125000 },
 	{ 1, {  1458000, HFPLL, 1, 0x36 }, L2(14), 1137500 },
 	{ 1, {  1512000, HFPLL, 1, 0x38 }, L2(14), 1150000 },
+	{ 1, {  1620000, HFPLL, 1, 0x3C }, L2(16), 1175000 },
+	{ 1, {  1728000, HFPLL, 1, 0x40 }, L2(17), 1200000 },
 	{ 0, { 0 } }
 };
 
@@ -200,6 +218,8 @@ static struct acpu_level tbl_faster[] __initdata = {
 	{ 1, {  1350000, HFPLL, 1, 0x32 }, L2(14), 1100000 },
 	{ 1, {  1458000, HFPLL, 1, 0x36 }, L2(14), 1112500 },
 	{ 1, {  1512000, HFPLL, 1, 0x38 }, L2(14), 1125000 },
+	{ 1, {  1620000, HFPLL, 1, 0x3C }, L2(16), 1150000 },
+	{ 1, {  1728000, HFPLL, 1, 0x40 }, L2(17), 1175000 },
 	{ 0, { 0 } }
 };
 
