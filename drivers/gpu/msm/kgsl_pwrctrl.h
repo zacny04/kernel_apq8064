@@ -23,22 +23,7 @@
 #define KGSL_PWRLEVEL_NOMINAL 1
 #define KGSL_PWRLEVEL_LAST_OFFSET 2
 
-#define KGSL_PWR_ON	0xFFFF
-
-#define KGSL_MAX_CLKS 6
-
-/* Only two supported levels, min & max */
-#define KGSL_CONSTRAINT_PWR_MAXLEVELS 2
-
-/* Symbolic table for the constraint type */
-#define KGSL_CONSTRAINT_TYPES \
-	{ KGSL_CONSTRAINT_NONE, "None" }, \
-	{ KGSL_CONSTRAINT_PWRLEVEL, "Pwrlevel" }
-/* Symbolic table for the constraint sub type */
-#define KGSL_CONSTRAINT_PWRLEVEL_SUBTYPES \
-	{ KGSL_CONSTRAINT_PWR_MIN, "Min" }, \
-	{ KGSL_CONSTRAINT_PWR_MAX, "Max" }
-
+#define KGSL_MAX_CLKS 5
 
 struct platform_device;
 
@@ -53,19 +38,6 @@ struct kgsl_clk_stats {
 	unsigned int elapsed_old;
 };
 
-struct kgsl_pwr_constraint {
-	unsigned int type;
-	unsigned int sub_type;
-	union {
-		struct {
-			unsigned int level;
-		} pwrlevel;
-	} hint;
-	unsigned long expires;
-	uint32_t owner_id;
-};
-
-
 /**
  * struct kgsl_pwrctrl - Power control settings for a KGSL device
  * @interrupt_num - The interrupt number for the device
@@ -75,8 +47,6 @@ struct kgsl_pwr_constraint {
  * @pwrlevels - List of supported power levels
  * @active_pwrlevel - The currently active power level
  * @thermal_pwrlevel - maximum powerlevel constraint from thermal
- * @default_pwrlevel - device wake up power level
- * @init_pwrlevel - device inital power level
  * @max_pwrlevel - maximum allowable powerlevel per the user
  * @min_pwrlevel - minimum allowable powerlevel per the user
  * @num_pwrlevels - number of available power levels
@@ -85,13 +55,11 @@ struct kgsl_pwr_constraint {
  * @gpu_reg - pointer to the regulator structure for gpu_reg
  * @gpu_cx - pointer to the regulator structure for gpu_cx
  * @pcl - bus scale identifier
+ * @nap_allowed - true if the device supports naps
  * @idle_needed - true if the device needs a idle before clock change
  * @irq_name - resource name for the IRQ
+ * @restore_slumber - Flag to indicate that we are in a suspend/restore sequence
  * @clk_stats - structure of clock statistics
- * @pm_qos_req_dma - the power management quality of service structure
- * @pm_qos_latency - allowed CPU latency in microseconds
- * @step_mul - multiplier for moving between power levels
- * @constraint - currently active power constraint
  */
 
 struct kgsl_pwrctrl {
@@ -99,12 +67,10 @@ struct kgsl_pwrctrl {
 	struct clk *ebi1_clk;
 	struct clk *grp_clks[KGSL_MAX_CLKS];
 	unsigned long power_flags;
-	unsigned long ctrl_flags;
 	struct kgsl_pwrlevel pwrlevels[KGSL_MAX_PWRLEVELS];
 	unsigned int active_pwrlevel;
 	int thermal_pwrlevel;
 	unsigned int default_pwrlevel;
-	unsigned int init_pwrlevel;
 	unsigned int max_pwrlevel;
 	unsigned int min_pwrlevel;
 	unsigned int num_pwrlevels;
@@ -119,13 +85,7 @@ struct kgsl_pwrctrl {
 	s64 time;
 	unsigned int restore_slumber;
 	struct kgsl_clk_stats clk_stats;
-	struct pm_qos_request pm_qos_req_dma;
-	unsigned int pm_qos_latency;
-	unsigned int step_mul;
-	unsigned int irq_last;
-	struct kgsl_pwr_constraint constraint;
 };
-
 
 void kgsl_pwrctrl_irq(struct kgsl_device *device, int state);
 int kgsl_pwrctrl_init(struct kgsl_device *device);
