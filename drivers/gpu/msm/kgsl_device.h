@@ -250,33 +250,51 @@ void kgsl_check_fences(struct work_struct *work);
 	.ver_major = DRIVER_VERSION_MAJOR,\
 	.ver_minor = DRIVER_VERSION_MINOR
 
-
 /**
  * struct kgsl_context - Master structure for a KGSL context object
- * @refcount - kref object for reference counting the context
- * @id - integer identifier for the context
- * @dev_priv - pointer to the owning device instance
- * @devctxt - pointer to the device specific context information
- * @reset_status - status indication whether a gpu reset occured and whether
+ * @refcount: kref object for reference counting the context
+ * @id: integer identifier for the context
+ * @priv: in-kernel context flags, use KGSL_CONTEXT_* values
+ * @dev_priv: pointer to the owning device instance
+ * @reset_status: status indication whether a gpu reset occured and whether
  * this context was responsible for causing it
- * @wait_on_invalid_ts - flag indicating if this context has tried to wait on a
+ * @wait_on_invalid_ts: flag indicating if this context has tried to wait on a
  * bad timestamp
- * @timeline - sync timeline used to create fences that can be signaled when a
+ * @timeline: sync timeline used to create fences that can be signaled when a
  * sync_pt timestamp expires
- * @events - list head of pending events for this context
- * @events_list - list node for the list of all contexts that have pending events
+ * @events: list head of pending events for this context
+ * @events_list: list node for the list of all contexts that have pending events
+ * @pid: process that owns this context.
+ * @pagefault: flag set if this context caused a pagefault.
+ * @pagefault_ts: global timestamp of the pagefault, if KGSL_CONTEXT_PAGEFAULT
+ * is set.
+ * @flags: flags from userspace controlling the behavior of this context
+ * @fault_count: number of times gpu hanged in last _context_throttle_time ms
+ * @fault_time: time of the first gpu hang in last _context_throttle_time ms
+ * @pwr_constraint: power constraint from userspace for this context
  */
 struct kgsl_context {
 	struct kref refcount;
 	uint32_t id;
+	pid_t pid;
 	struct kgsl_device_private *dev_priv;
-	void *devctxt;
+	struct kgsl_process_private *proc_priv;
+	unsigned long priv;
+	struct kgsl_device *device;
+	void *devctxt;	
 	unsigned int reset_status;
 	bool wait_on_invalid_ts;
 	struct sync_timeline *timeline;
 	struct list_head events;
 	struct list_head events_list;
+	unsigned int pagefault_ts;
+	unsigned int flags;
+	unsigned int fault_count;
+	unsigned long fault_time;
+	struct kgsl_pwr_constraint pwr_constraint;
 };
+
+
 
 /**
  * struct kgsl_process_private -  Private structure for a KGSL process (across
