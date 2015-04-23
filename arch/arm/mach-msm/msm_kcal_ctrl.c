@@ -445,11 +445,11 @@ static void msm_kcal_late_resume(struct early_suspend *handler)
 	kcal_ctrl_pdata->refresh_display();
 }
 
-/*static struct early_suspend msm_kcal_early_suspend_struct_driver = {
+static struct early_suspend msm_kcal_early_suspend_struct_driver = {
         .level = EARLY_SUSPEND_LEVEL_DISABLE_FB,
         .suspend = msm_kcal_early_suspend,
         .resume = msm_kcal_late_resume,
-};*/
+};
 
 int __init kcal_ctrl_init(void)
 {
