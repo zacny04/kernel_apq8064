@@ -5,7 +5,7 @@ WLAN_ROOT := drivers/staging/prima
 # Feature flags which are not (currently) configurable via Kconfig
 
 #Whether to build debug version
-BUILD_DEBUG_VERSION := 0
+BUILD_DEBUG_VERSION := 1
 
 #Enable this flag to build driver in diag version
 BUILD_DIAG_VERSION := 0
@@ -358,6 +358,7 @@ WDA_INC := 	-I$(WLAN_ROOT)/$(WDA_INC_DIR) \
 		-I$(WLAN_ROOT)/$(WDA_SRC_DIR)
 
 WDA_OBJS :=	$(WDA_SRC_DIR)/wlan_qct_wda.o \
+		$(WDA_SRC_DIR)/wlan_qct_wda_debug.o \
 		$(WDA_SRC_DIR)/wlan_qct_wda_ds.o \
 		$(WDA_SRC_DIR)/wlan_qct_wda_legacy.o \
 		$(WDA_SRC_DIR)/wlan_nv.o

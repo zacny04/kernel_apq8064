@@ -60,6 +60,7 @@
 #include <wlan_hdd_includes.h>
 #include <net/arp.h>
 #include <net/cfg80211.h>
+#include <linux/wireless.h>
 #include <wlan_hdd_wowl.h>
 #include <aniGlobal.h>
 #include "ccmApi.h"
@@ -74,6 +75,7 @@
 #include "sapInternal.h"
 #include "wlan_hdd_softap_tx_rx.h"
 #include "wlan_hdd_main.h"
+#include "wlan_hdd_assoc.h"
 #include "wlan_hdd_power.h"
 #ifdef WLAN_BTAMP_FEATURE
 #include "bap_hdd_misc.h"
@@ -83,7 +85,6 @@
 #include "wlan_hdd_tdls.h"
 #endif
 #include "wlan_nv.h"
-#include "vos_sched.h"
 
 #define g_mode_rates_size (12)
 #define a_mode_rates_size (8)
@@ -468,14 +469,6 @@ typedef enum
    DATA_RATE_11AC_MAX_MCS_9,
    DATA_RATE_11AC_MAX_MCS_NA
 } eDataRate11ACMaxMcs;
-
-/* SSID broadcast  type */
-typedef enum eSSIDBcastType
-{
-  eBCAST_UNKNOWN      = 0,
-  eBCAST_NORMAL       = 1,
-  eBCAST_HIDDEN       = 2,
-} tSSIDBcastType;
 
 /* MCS Based VHT rate table */
 static struct index_vht_data_rate_type supported_vht_mcs_rate[] =
@@ -2284,7 +2277,6 @@ static int wlan_hdd_cfg80211_stop_ap (struct wiphy *wiphy,
     hdd_scaninfo_t *pScanInfo  = NULL;
     hdd_adapter_t  *staAdapter = NULL;
     VOS_STATUS status;
-    long ret;
 
     ENTER();
 
@@ -2322,23 +2314,29 @@ static int wlan_hdd_cfg80211_stop_ap (struct wiphy *wiphy,
     hddLog(VOS_TRACE_LEVEL_INFO, "%s: device_mode = %d\n",
                               __func__,pAdapter->device_mode);
 
-    ret = wlan_hdd_scan_abort(pAdapter);
-
-    if (ret <= 0)
+    if ((pScanInfo != NULL) && pScanInfo->mScanPending)
     {
-        VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
-                   FL("Timeout occurred while waiting for abortscan %ld"), ret);
-
-        if (pHddCtx->isLogpInProgress)
+        INIT_COMPLETION(pScanInfo->abortscan_event_var);
+        hdd_abort_mac_scan(staAdapter->pHddCtx, eCSR_SCAN_ABORT_DEFAULT);
+        status = wait_for_completion_interruptible_timeout(
+                           &pScanInfo->abortscan_event_var,
+                           msecs_to_jiffies(WLAN_WAIT_TIME_ABORTSCAN));
+        if (!status)
         {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
-                      "%s: LOGP in Progress. Ignore!!!", __func__);
+            VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
+                         "%s: Timeout occurred while waiting for abortscan" ,
+                         __func__);
+
+            if (pHddCtx->isLogpInProgress)
+            {
+                VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                          "%s: LOGP in Progress. Ignore!!!", __func__);
+                return -EAGAIN;
+            }
 
             VOS_ASSERT(pScanInfo->mScanPending);
-            return -EAGAIN;
+            return 0;
         }
-        VOS_ASSERT(pScanInfo->mScanPending);
-        return 0;
     }
 
     hdd_hostapd_stop(dev);
@@ -2589,10 +2587,10 @@ void* wlan_hdd_change_country_code_cb(void *pAdapter)
 }
 
 /*
- * FUNCTION: __wlan_hdd_cfg80211_change_iface
+ * FUNCTION: wlan_hdd_cfg80211_change_iface
  * This function is used to set the interface type (INFRASTRUCTURE/ADHOC)
  */
-static int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
+int wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
                                     struct net_device *ndev,
                                     enum nl80211_iftype type,
                                     u32 *flags,
@@ -2768,7 +2766,12 @@ static int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
                  * protect the concurrent access for the Adapters by TDLS
                  * module.
                  */
-                mutex_lock(&pHddCtx->tdls_lock);
+                if (mutex_lock_interruptible(&pHddCtx->tdls_lock))
+                {
+                    VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                              "%s: unable to lock list", __func__);
+                    return -EINVAL;
+                }
 #endif
                 //De-init the adapter.
                 hdd_stop_adapter( pHddCtx, pAdapter );
@@ -2905,7 +2908,12 @@ static int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
                  * protect the concurrent access for the Adapters by TDLS
                  * module.
                  */
-                mutex_lock(&pHddCtx->tdls_lock);
+                if (mutex_lock_interruptible(&pHddCtx->tdls_lock))
+                {
+                    VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                              "%s: unable to lock list", __func__);
+                    return -EINVAL;
+                }
 #endif
                 hdd_stop_adapter( pHddCtx, pAdapter );
                 hdd_deinit_adapter( pHddCtx, pAdapter );
@@ -3003,26 +3011,6 @@ done:
     return 0;
 }
 
-/*
- * FUNCTION: wlan_hdd_cfg80211_change_iface
- * wrapper function to protect the actual implementation from SSR.
- */
-int wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
-                                    struct net_device *ndev,
-                                    enum nl80211_iftype type,
-                                    u32 *flags,
-                                    struct vif_params *params
-                                  )
-{
-    int ret;
-
-    vos_ssr_protect(__func__);
-    ret = __wlan_hdd_cfg80211_change_iface(wiphy, ndev, type, flags, params);
-    vos_ssr_unprotect(__func__);
-
-    return ret;
-}
-
 #ifdef FEATURE_WLAN_TDLS
 static int wlan_hdd_tdls_add_station(struct wiphy *wiphy,
           struct net_device *dev, u8 *mac, bool update, tCsrStaParams *StaParams)
@@ -3031,7 +3019,6 @@ static int wlan_hdd_tdls_add_station(struct wiphy *wiphy,
     hdd_context_t *pHddCtx = wiphy_priv(wiphy);
     VOS_STATUS status;
     hddTdlsPeer_t *pTdlsPeer;
-    tANI_U16 numCurrTdlsPeers;
 
     ENTER();
 
@@ -3106,15 +3093,12 @@ static int wlan_hdd_tdls_add_station(struct wiphy *wiphy,
     /* first to check if we reached to maximum supported TDLS peer.
        TODO: for now, return -EPERM looks working fine,
        but need to check if any other errno fit into this category.*/
-    numCurrTdlsPeers = wlan_hdd_tdlsConnectedPeers(pAdapter);
-    if (HDD_MAX_NUM_TDLS_STA <= numCurrTdlsPeers)
+    if (HDD_MAX_NUM_TDLS_STA <= wlan_hdd_tdlsConnectedPeers(pAdapter))
     {
         VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
                    "%s: " MAC_ADDRESS_STR
-                   " TDLS Max peer already connected. Request declined."
-                   " Num of peers (%d), Max allowed (%d).",
-                   __func__, MAC_ADDR_ARRAY(mac), numCurrTdlsPeers,
-                   HDD_MAX_NUM_TDLS_STA);
+                   " TDLS Max peer already connected. Request declined.",
+                    __func__, MAC_ADDR_ARRAY(mac));
         goto error;
     }
     else
@@ -5166,7 +5150,6 @@ int wlan_hdd_cfg80211_connect_start( hdd_adapter_t  *pAdapter,
 {
     int status = 0;
     hdd_wext_state_t *pWextState;
-    hdd_context_t *pHddCtx;
     v_U32_t roamId;
     tCsrRoamProfile *pRoamProfile;
     eCsrAuthType RSNAuthType;
@@ -5174,14 +5157,6 @@ int wlan_hdd_cfg80211_connect_start( hdd_adapter_t  *pAdapter,
     ENTER();
 
     pWextState = WLAN_HDD_GET_WEXT_STATE_PTR(pAdapter);
-    pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
-    status = wlan_hdd_validate_context(pHddCtx);
-    if (status)
-    {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
-                  "%s: HDD context is not valid!", __func__);
-        return status;
-    }
 
     if (SIR_MAC_MAX_SSID_LENGTH < ssid_len)
     {
@@ -6751,13 +6726,6 @@ static int wlan_hdd_cfg80211_get_station(struct wiphy *wiphy, struct net_device 
         return 0;
     }
 
-    if (VOS_TRUE == pHddStaCtx->hdd_ReassocScenario)
-    {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
-                 "%s: Roaming in progress, so unable to proceed this request", __func__);
-        return 0;
-    }
-
     status = wlan_hdd_validate_context(pHddCtx);
 
     if (0 != status)
@@ -7782,19 +7750,11 @@ static int wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
         return -EINVAL;
     }
 
-    ret = wlan_hdd_scan_abort(pAdapter);
-    if (ret <= 0)
-    {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
-                  "%s: aborting the existing scan is unsuccessfull", __func__);
-        return -EBUSY;
-    }
-
-/* The current firmware design for PNO does not consider concurrent
- * active sessions.Hence , determine the concurrent active sessions
- * and return a failure to the framework on a request for schedule
- * scan.
- */
+    /* The current firmware design for PNO does not consider concurrent
+     * active sessions.Hence , determine the concurrent active sessions
+     * and return a failure to the framework on a request for schedule
+     * scan.
+     */
     if (eHAL_STATUS_SUCCESS != wlan_hdd_is_pno_allowed(pAdapter))
     {
         VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
@@ -7876,7 +7836,7 @@ static int wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
                request->match_sets[i].ssid.ssid_len);
         pPnoRequest->aNetworks[i].authentication = 0; /*eAUTH_TYPE_ANY*/
         pPnoRequest->aNetworks[i].encryption     = 0; /*eED_ANY*/
-        pPnoRequest->aNetworks[i].bcastNetwType  = eBCAST_NORMAL; /*eBCAST_NORMAL*/
+        pPnoRequest->aNetworks[i].bcastNetwType  = 0; /*eBCAST_UNKNOWN*/
 
         /*Copying list of valid channel into request */
         memcpy(pPnoRequest->aNetworks[i].aChannels, valid_ch, num_ch);
@@ -8080,7 +8040,6 @@ static int wlan_hdd_cfg80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *d
     int max_sta_failed = 0;
     int responder;
     long rc;
-    tANI_U16 numCurrTdlsPeers;
 
     if (NULL == pHddCtx || NULL == pHddCtx->cfg_ini)
     {
@@ -8136,8 +8095,7 @@ static int wlan_hdd_cfg80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *d
     if (SIR_MAC_TDLS_SETUP_REQ == action_code ||
         SIR_MAC_TDLS_SETUP_RSP == action_code )
     {
-        numCurrTdlsPeers = wlan_hdd_tdlsConnectedPeers(pAdapter);
-        if (HDD_MAX_NUM_TDLS_STA <= numCurrTdlsPeers)
+        if (HDD_MAX_NUM_TDLS_STA <= wlan_hdd_tdlsConnectedPeers(pAdapter))
         {
             /* supplicant still sends tdls_mgmt(SETUP_REQ) even after
                we return error code at 'add_station()'. Hence we have this
@@ -8147,9 +8105,8 @@ static int wlan_hdd_cfg80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *d
             {
                 VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
                            "%s: " MAC_ADDRESS_STR
-                           " TDLS Max peer already connected. action (%d) declined. Num of peers (%d), Max allowed (%d).",
-                           __func__, MAC_ADDR_ARRAY(peer), action_code,
-                           numCurrTdlsPeers, HDD_MAX_NUM_TDLS_STA);
+                           " TDLS Max peer already connected. action %d declined.",
+                           __func__, MAC_ADDR_ARRAY(peer), action_code);
                 return -EINVAL;
             }
             else
@@ -8159,9 +8116,8 @@ static int wlan_hdd_cfg80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *d
                 status_code = eSIR_MAC_UNSPEC_FAILURE_STATUS;
                 VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
                            "%s: " MAC_ADDRESS_STR
-                           " TDLS Max peer already connected, send response status (%d). Num of peers (%d), Max allowed (%d).",
-                           __func__, MAC_ADDR_ARRAY(peer), status_code,
-                           numCurrTdlsPeers, HDD_MAX_NUM_TDLS_STA);
+                           " TDLS Max peer already connected send response status %d",
+                           __func__, MAC_ADDR_ARRAY(peer), status_code);
                 max_sta_failed = -EPERM;
                 /* fall through to send setup resp with failure status
                 code */
