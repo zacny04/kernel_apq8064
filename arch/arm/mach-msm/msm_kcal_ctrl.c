@@ -22,7 +22,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kallsyms.h>
-#include <linux/earlysuspend.h>
+#include <linux/powersuspend.h>
 
 #include "../../../drivers/video/msm/mdp.h"
 
@@ -435,18 +435,17 @@ static struct platform_driver this_driver = {
 
 typedef int (*funcPtr)(void);
 
-static void msm_kcal_early_suspend(struct early_suspend *handler)
+static void msm_kcal_early_suspend(struct power_suspend *handler)
 {
 	return;
 }
 
-static void msm_kcal_late_resume(struct early_suspend *handler)
+static void msm_kcal_late_resume(struct power_suspend *handler)
 {
 	kcal_ctrl_pdata->refresh_display();
 }
 
-static struct early_suspend msm_kcal_early_suspend_struct_driver = {
-        .level = EARLY_SUSPEND_LEVEL_DISABLE_FB,
+static struct power_suspend msm_kcal_early_suspend_struct_driver = {
         .suspend = msm_kcal_early_suspend,
         .resume = msm_kcal_late_resume,
 };
@@ -461,7 +460,7 @@ int __init kcal_ctrl_init(void)
 	if (ret)
 		return ret;
 
-	register_early_suspend(&msm_kcal_early_suspend_struct_driver);
+	register_power_suspend(&msm_kcal_early_suspend_struct_driver);
 
 	return platform_driver_register(&this_driver);
 }
