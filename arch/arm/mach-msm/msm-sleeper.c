@@ -13,7 +13,7 @@
  *
  */
 
-#include <linux/earlysuspend.h>
+#include <linux/powersuspend.h>
 #include <linux/workqueue.h>
 #include <linux/cpu.h>
 #include <linux/module.h>
@@ -28,8 +28,8 @@ extern uint32_t maxscroff_freq;
 extern uint32_t ex_max_freq;
 static int limit_set = 0;
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static void msm_sleeper_early_suspend(struct early_suspend *h)
+#ifdef CONFIG_POWERSUSPEND
+static void msm_sleeper_power_suspend(struct power_suspend *h)
 {
 	int cpu;
 
@@ -43,7 +43,7 @@ static void msm_sleeper_early_suspend(struct early_suspend *h)
 	return; 
 }
 
-static void msm_sleeper_late_resume(struct early_suspend *h)
+static void msm_sleeper_late_resume(struct power_suspend *h)
 {
 	int cpu;
 
@@ -58,9 +58,8 @@ static void msm_sleeper_late_resume(struct early_suspend *h)
 	return; 
 }
 
-static struct early_suspend msm_sleeper_early_suspend_driver = {
-	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 10,
-	.suspend = msm_sleeper_early_suspend,
+static struct power_suspend msm_sleeper_power_suspend_driver = {
+	.suspend = msm_sleeper_power_suspend,
 	.resume = msm_sleeper_late_resume,
 };
 #endif
@@ -71,8 +70,8 @@ static int __init msm_sleeper_init(void)
 		 MSM_SLEEPER_MAJOR_VERSION,
 		 MSM_SLEEPER_MINOR_VERSION);
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	register_early_suspend(&msm_sleeper_early_suspend_driver);
+#ifdef CONFIG_POWERSUSPEND
+	register_power_suspend(&msm_sleeper_power_suspend_driver);
 #endif
 	return 0;
 }
