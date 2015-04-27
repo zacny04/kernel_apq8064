@@ -1296,7 +1296,7 @@ __cpufreq_driver_target(p, freq, dbs_tuners_ins.powersave_bias ?
 CPUFREQ_RELATION_L : CPUFREQ_RELATION_H);
 }
 
-int set_two_phase_freq(int cpufreq)
+int set_two_phase_freq_id(int cpufreq)
 {
 int i = 0;
 for ( i = 0 ; i < NR_CPUS; i++)
@@ -1304,11 +1304,11 @@ two_phase_freq_array[i] = cpufreq;
 return 0;
 }
 
-void set_two_phase_freq_by_cpu ( int cpu_nr, int cpufreq){
+void set_two_phase_freq_by_cpu_id ( int cpu_nr, int cpufreq){
 two_phase_freq_array[cpu_nr-1] = cpufreq;
 }
 
-int input_event_boosted(void)
+int input_event_boosted_id(void)
 {
 unsigned long flags;
 
@@ -1691,7 +1691,7 @@ return;
 }
 }
 
-if (input_event_boosted()) {
+if (input_event_boosted_id()) {
 return;
 }
 
@@ -1818,7 +1818,7 @@ if (num_online_cpus() > 1)
 delay -= jiffies % delay;
 }
 } else {
-if (input_event_boosted())
+if (input_event_boosted_id())
 goto sched_wait;
 
 __cpufreq_driver_target(dbs_info->cur_policy,
@@ -2124,7 +2124,7 @@ input_event_min_freq_array[i] = cpufreq;
 return 0;
 }
 
-void set_input_event_min_freq_by_cpu ( int cpu_nr, int cpufreq){
+void set_input_event_min_freq_by_cpu_id ( int cpu_nr, int cpufreq){
 input_event_min_freq_array[cpu_nr-1] = cpufreq;
 }
 
