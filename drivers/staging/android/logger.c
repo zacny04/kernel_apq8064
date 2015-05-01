@@ -453,19 +453,18 @@ static ssize_t do_write_log_from_user(struct logger_log *log,
 	return count;
 }
 
-static void log_early_suspend(struct early_suspend *handler)
+static void log_early_suspend(struct power_suspend *handler)
 {
 	if (log_mode == 1)
 		log_enabled = 0;
 }
 
-static void log_late_resume(struct early_suspend *handler)
+static void log_late_resume(struct power_suspend *handler)
 {
 	log_enabled = 1;
 }
 
-static struct early_suspend log_suspend = {
-	.level = EARLY_SUSPEND_LEVEL_DISABLE_FB + 10,
+static struct power_suspend log_suspend = {
 	.suspend = log_early_suspend,
 	.resume = log_late_resume,
 };
