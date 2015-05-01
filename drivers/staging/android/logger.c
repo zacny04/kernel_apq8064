@@ -26,7 +26,7 @@
 #include <linux/slab.h>
 #include <linux/time.h>
 #include "logger.h"
-#include <linux/earlysuspend.h>
+#include <linux/powersuspend.h>
 
 #include <asm/ioctls.h>
 
