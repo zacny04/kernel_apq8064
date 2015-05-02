@@ -802,7 +802,7 @@ static int __init logger_init(void)
 {
 	int ret;
 
-	register_early_suspend(&log_suspend);
+	register_power_suspend(&log_suspend);
 
 	ret = init_log(&log_main);
 	if (unlikely(ret))

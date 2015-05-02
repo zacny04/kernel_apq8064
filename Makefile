@@ -1,6 +1,6 @@
 VERSION = 3
 PATCHLEVEL = 4
-SUBLEVEL = 99
+SUBLEVEL = 107
 EXTRAVERSION =
 NAME = Saber-toothed Squirrel
 
@@ -158,7 +158,7 @@ VPATH		:= $(srctree)$(if $(KBUILD_EXTMOD),:$(KBUILD_EXTMOD))
 
 export srctree objtree VPATH
 
-CCACHE := ccache
+CCACHE := /home/airlessproject/RR/prebuilts/misc/linux-x86/ccache/ccache
 
 # SUBARCH tells the usermode build what the underlying arch is.  That is set
 # first, and if a usermode build is happening, the "ARCH=um" on the command
@@ -348,22 +348,14 @@ CHECK		= sparse
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-
-CUSTOM_FLAG	= -fgcse-lm -fgcse-sm -fsched-spec-load -fgcse-after-reload \
-		  -fforce-addr -ffast-math -fsingle-precision-constant \
-		  -mcpu=cortex-a15 -mtune=cortex-a15 -mfpu=neon-vfpv4 -ftree-vectorize  \
-		  -mvectorize-with-neon-quad -marm -pipe \
-		  -fgraphite -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block \
-		  -munaligned-access -fpredictive-commoning -fivopts \
-		  -fira-loop-pressure
-
-CFLAGS_MODULE   = -DMODULE -fno-pic $(CUSTOM_FLAG)
-AFLAGS_MODULE   = -DMODULE $(CUSTOM_FLAG)
-LDFLAGS_MODULE  = 
-CFLAGS_KERNEL	= $(CUSTOM_FLAG)
-AFLAGS_KERNEL	= $(CUSTOM_FLAG)
+KERNELFLAGS	= -O3 -munaligned-access -fgcse-sm -fgcse-las -fsingle-precision-constant -fforce-addr -ffast-math -fsched-spec-load -mtune=cortex-a15 -mcpu=cortex-a15 -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -fpredictive-commoning -fgraphite
+MODFLAGS	= -DMODULE $(KERNELFLAGS)
+CFLAGS_MODULE   = $(MODFLAGS)
+AFLAGS_MODULE   = $(MODFLAGS)
+LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
+CFLAGS_KERNEL	= $(KERNELFLAGS)
+AFLAGS_KERNEL	= $(KERNELFLAGS)
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
-
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
@@ -374,19 +366,21 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
-KBUILD_CFLAGS := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -Wmaybe-uninitialized\
-	-fno-strict-aliasing -fno-common \
-	-Werror-implicit-function-declaration \
-	-Wno-format-security \
-	-fno-delete-null-pointer-checks $(CUSTOM_FLAG)
-
-# -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block
-
-KBUILD_AFLAGS_KERNEL := $(KBUILD_CFLAGS)
-KBUILD_CFLAGS_KERNEL := $(KBUILD_CFLAGS)
+KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
+		   -fno-strict-aliasing -fno-common \
+		   -Werror-implicit-function-declaration \
+		   -Wno-format-security \
+		   -fno-delete-null-pointer-checks \
+		   -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
+		   -Wno-sizeof-pointer-memaccess \
+		   -fmodulo-sched -fmodulo-sched-allow-regmoves \
+		   -mfpu=neon-vfpv4 -mtune=cortex-a15  -mcpu=cortex-a15 \
+		   -Wno-array-bounds -Wno-uninitialized
+KBUILD_AFLAGS_KERNEL :=
+KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
-KBUILD_AFLAGS_MODULE  := -DMODULE $(KBUILD_CFLAGS)
-KBUILD_CFLAGS_MODULE  := -DMODULE $(KBUILD_CFLAGS)
+KBUILD_AFLAGS_MODULE  := -DMODULE
+KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
@@ -604,6 +598,8 @@ ifndef CONFIG_FUNCTION_TRACER
 KBUILD_CFLAGS	+= -fomit-frame-pointer
 endif
 endif
+
+KBUILD_CFLAGS   += $(call cc-option, -fno-var-tracking-assignments)
 
 ifdef CONFIG_DEBUG_INFO
 KBUILD_CFLAGS	+= -g
@@ -1179,7 +1175,7 @@ CLEAN_FILES +=	vmlinux System.map \
 # Directories & files removed with 'make mrproper'
 MRPROPER_DIRS  += include/config usr/include include/generated          \
                   arch/*/include/generated
-MRPROPER_FILES += .config.old .version .old_version             \
+MRPROPER_FILES += .config .config.old .version .old_version             \
                   include/linux/version.h                               \
 		  Module.symvers tags TAGS cscope* GPATH GTAGS GRTAGS GSYMS
 
@@ -1584,3 +1580,4 @@ FORCE:
 # Declare the contents of the .PHONY variable as phony.  We keep that
 # information in a variable so we can use it in if_changed and friends.
 .PHONY: $(PHONY)
+
