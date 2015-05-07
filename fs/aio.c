@@ -1730,8 +1730,9 @@ long do_io_submit(aio_context_t ctx_id, long nr,
 		if (ret)
 			break;
 	}
+#ifndef CONFIG_AIO_SSD_ONLY
 	blk_finish_plug(&plug);
-
+#endif
 	kiocb_batch_free(ctx, &batch);
 	put_ioctx(ctx);
 	return i ? i : ret;
