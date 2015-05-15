@@ -1393,7 +1393,7 @@ config MSM_PCIE
 
 config MSM_SMD_DEBUG
 	depends on MSM_SMD
-	default y
+	default n
 	bool "MSM SMD debug support"
 	help
 	  Support for debugging the SMD for communication
@@ -1434,7 +1434,7 @@ config MSM_RESET_MODEM
 
 config MSM_SMD_LOGGING
 	depends on MSM_SMD
-	default y
+	default n
 	bool "MSM Shared Memory Logger"
 	help
 	  This option exposes the shared memory logger at /dev/smem_log
@@ -1801,7 +1801,7 @@ config MSM_VREG_SWITCH_INVERTED
 
 config MSM_DMA_TEST
 	tristate "MSM DMA test module"
-	default m
+	default n
 	help
 	  Intended to be compiled as a module.  Provides a device node
 	  and ioctls for testing the MSM dma system.
@@ -2120,7 +2120,7 @@ config SCORPION_Uni_45nm_BUG
 config MSM_BUSPM_DEV
 	tristate "MSM Bus Performance Monitor Kernel Module"
 	depends on (ARCH_MSM8X60 || ARCH_MSM8960)
-	default m
+	default n
 	help
 	  This kernel module is used to mmap() hardware registers for the
 	  performance monitors, counters, etc. The module can also be used to
@@ -2517,6 +2517,7 @@ config MSM_OCMEM_POWER_DISABLE
 
 config MSM_RTB
 	bool "Register tracing"
+	default n
 	help
 	  Add support for logging different events to a small uncached
 	  region. This is designed to aid in debugging reset cases where the
