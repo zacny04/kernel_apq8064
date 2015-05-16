@@ -792,11 +792,6 @@ static void __init reserve_mdp_memory(void)
 	apq8064_mdp_writeback(apq8064_reserve_table);
 }
 
-static void __init reserve_mpdcvs_memory(void)
-{
-	apq8064_reserve_table[MEMTYPE_EBI1].size += SZ_32K;
-}
-
 /*
  * Default configuration of memory size for RDTAGS.
  * If we didn't set up the memory size for RDTAGS in deconfigs,
@@ -918,7 +913,6 @@ static void __init apq8064_calculate_reserve_sizes(void)
 	reserve_ion_memory();
 	reserve_mdp_memory();
 	reserve_rtb_memory();
-	reserve_mpdcvs_memory();
 }
 
 static struct reserve_info apq8064_reserve_info __initdata = {
