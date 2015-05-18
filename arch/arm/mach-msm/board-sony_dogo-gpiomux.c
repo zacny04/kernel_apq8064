@@ -54,13 +54,6 @@ static struct gpiomux_setting gpio_spi_cs2_config = {
 	.pull = GPIOMUX_PULL_NONE,
 };
 
-/* Chip selects for SPI clients */
-static struct gpiomux_setting gpio_spi_cs_config = {
-	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_12MA,
-	.pull = GPIOMUX_PULL_UP,
-};
-
 struct msm_gpiomux_config apq8064_ethernet_configs[] = {
 	{
 		.gpio = 43,
@@ -71,6 +64,13 @@ struct msm_gpiomux_config apq8064_ethernet_configs[] = {
 	},
 };
 #endif
+
+/* Chip selects for SPI clients */
+static struct gpiomux_setting gpio_spi_cs_config = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_12MA,
+	.pull = GPIOMUX_PULL_UP,
+};
 
 static struct gpiomux_setting gpio_i2c_config = {
 	.func = GPIOMUX_FUNC_1,
@@ -1593,9 +1593,9 @@ static void __init gpiomux_arrange_all_qct_configs(void)
 	gpiomux_set_qct_configs(apq8064_audio_codec_configs,
 			ARRAY_SIZE(apq8064_audio_codec_configs));
 
-	pr_debug(
-	"%s(): audio-auxpcm: Include GPIO configs as audio is not the primary"
-	" user for these GPIO Pins\n", __func__);
+	pr_debug("%s(): audio-auxpcm: Include GPIO configs"
+		" as audio is not the primary user"
+		" for these GPIO Pins\n", __func__);
 
 	gpiomux_set_qct_configs(apq8064_ext_regulator_configs,
 			ARRAY_SIZE(apq8064_ext_regulator_configs));
