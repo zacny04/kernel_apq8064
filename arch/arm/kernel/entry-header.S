@@ -109,10 +109,10 @@
 	.endm
 
 	@
-	@ 32-bit wide "mov pc, reg"
+	@ 32-bit wide "ret  reg"
 	@
-	.macro	movw_pc, reg
-	mov	pc, \reg
+	.macro	ret.w, reg
+	ret	\reg
 	.endm
 #else	/* CONFIG_THUMB2_KERNEL */
 	.macro	svc_exit, rpsr
@@ -156,10 +156,10 @@
 	.endm
 
 	@
-	@ 32-bit wide "mov pc, reg"
+	@ 32-bit wide "ret  reg"
 	@
-	.macro	movw_pc, reg
-	mov	pc, \reg
+	.macro	ret.w, reg
+	ret	\reg
 	nop
 	.endm
 #endif	/* !CONFIG_THUMB2_KERNEL */

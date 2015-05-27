@@ -1861,7 +1861,7 @@ sha256_block_data_order:
 #else
 	ldmia	sp!,{r4-r11,lr}
 	tst	lr,#1
-	moveq	pc,lr			@ be binary compatible with V4, yet
+	reteq	lr			@ be binary compatible with V4, yet
 	.word	0xe12fff1e			@ interoperable with Thumb ISA:-)
 #endif
 .size	sha256_block_data_order,.-sha256_block_data_order
