@@ -14,6 +14,7 @@
 #include <linux/linkage.h>
 #include <linux/init.h>
 #include <asm/page.h>
+#include <asm/assembler.h>
 #include "proc-macros.S"
 
 /*

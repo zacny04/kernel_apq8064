@@ -1,4 +1,5 @@
 #include <asm/unwind.h>
+#include <asm/assembler.h>
 
 #if __LINUX_ARM_ARCH__ >= 6
 	.macro	bitop, name, instr

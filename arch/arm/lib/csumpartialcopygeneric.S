@@ -17,6 +17,8 @@
  * Note that 'tst' and 'teq' preserve the carry flag.
  */
 
+#include <asm/assembler.h>
+
 src	.req	r0
 dst	.req	r1
 len	.req	r2
