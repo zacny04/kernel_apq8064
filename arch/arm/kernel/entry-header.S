@@ -108,12 +108,6 @@
 	mov	\rd, \rd, lsl #13
 	.endm
 
-	@
-	@ 32-bit wide "ret  reg"
-	@
-	.macro	ret.w, reg
-	ret	\reg
-	.endm
 #else	/* CONFIG_THUMB2_KERNEL */
 	.macro	svc_exit, rpsr
 	ldr	lr, [sp, #S_SP]			@ top of the stack

@@ -3,6 +3,7 @@
  */
 
 #include <asm/kexec.h>
+#include <asm/assembler.h>
 
 #ifdef CONFIG_KEXEC_HARDBOOT
 #include <asm/memory.h>
