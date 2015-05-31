@@ -894,11 +894,11 @@ config FB_MSM_LCDC_DSUB
 
 config FB_MSM_EXT_INTERFACE_COMMON
 	bool
-	default y
+	default n
 
 config FB_MSM_HDMI_COMMON
 	bool
-	default y
+	default n
 
 config FB_MSM_HDMI_3D
 	bool
@@ -930,21 +930,21 @@ config FB_MSM_HDMI_MSM_PANEL
         select FB_MSM_EXT_INTERFACE_COMMON
 	select FB_MSM_HDMI_COMMON
 	select FB_MSM_HDMI_3D if !FB_MSM_MHL_SII8334
-	default y
+	default n
 	---help---
 	  Support for 480p/720p/1080i/1080p output through MSM HDMI
 
 config FB_MSM_HDMI_MSM_PANEL_DVI_SUPPORT
 	depends on FB_MSM_HDMI_MSM_PANEL
 	bool "Use DVI mode"
-	default y
+	default n
 	---help---
 	  Support for DVI mode for MSM HDMI 1080p Panel
 
 config FB_MSM_HDMI_MSM_PANEL_CEC_SUPPORT
 	depends on FB_MSM_HDMI_MSM_PANEL
 	bool "Enable CEC"
-	default y
+	default n
 	---help---
 	  Support for HDMI CEC Feature
 	  Choose to enable CEC
@@ -952,7 +952,7 @@ config FB_MSM_HDMI_MSM_PANEL_CEC_SUPPORT
 config FB_MSM_HDMI_MHL_9244
 	depends on FB_MSM_HDMI_MSM_PANEL
 	bool 'SI_MHL 9244 support'
-	default y
+	default n
 	---help---
 	  Support the HDMI to MHL conversion.
 	  MHL (Mobile High-Definition Link) technology
