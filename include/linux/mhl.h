@@ -23,7 +23,7 @@
 #include <linux/input.h>
 #include <linux/mutex.h>
 #include <linux/mhl_defs.h>
-#include <linux/powersuspend.h>
+#include <linux/earlysuspend.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -105,7 +105,6 @@ struct mhl_device {
 	const struct mhl_ops *ops;
 
 	int full_operation;
-	int suspended;
 
 	struct mhl_state state;
 	unsigned int mhl_online;
@@ -153,7 +152,9 @@ struct mhl_device {
 	int mouse_move_distance_dy;
 	struct input_dev *input;
 
-	struct power_suspend power_suspend;
+	struct early_suspend early_suspend;
+
+	int screen_status;
 };
 
 /********************************
