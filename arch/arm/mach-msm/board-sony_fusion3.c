@@ -3241,9 +3241,6 @@ static struct msm_thermal_data msm_thermal_pdata = {
 	.temp_hysteresis_degC = 5,
 	.freq_step = 1,
 #endif
-	.core_limit_temp_degC = 80,
-	.core_temp_hysteresis_degC = 10,
-	.core_control_mask = 0xe,
 };
 
 #define MSM_SHARED_RAM_PHYS 0x80000000
