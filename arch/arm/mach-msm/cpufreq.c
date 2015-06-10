@@ -320,6 +320,7 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	thermal_max_freq = policy->max;
 	thermal_user_min_freq = policy->cpuinfo.min_freq;
 	thermal_user_max_freq = policy->cpuinfo.max_freq;
+	ex_max_freq = policy->cpuinfo.max_freq;
 #endif
 
 	cur_freq = acpuclk_get_rate(policy->cpu);
