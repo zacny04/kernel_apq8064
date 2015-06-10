@@ -1631,6 +1631,10 @@ config MSM_CPU_FREQ_MIN
 
 endif # CPU_FREQ_MSM
 
+config THERMAL_CPU_FREQ
+	bool "Enable setting thermal frequencies"
+	default n
+
 config CPU_VOLTAGE_TABLE
 	bool "Enable CPU Voltage Table via sysfs for adjustements"
 	default n
