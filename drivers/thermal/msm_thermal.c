@@ -116,10 +116,7 @@ static void check_temp(struct work_struct *work)
 	uint32_t freq = 0;
 	long temp = 0;
 
-#ifdef CONFIG_THERMAL_CPU_FREQ
 	info.cpuinfo_max_freq = thermal_user_max_freq;
-#endif
-
 	tsens_dev.sensor_num = 0;
 	tsens_get_temp(&tsens_dev, &temp);
 
