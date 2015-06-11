@@ -28,12 +28,10 @@
 static unsigned int temp_threshold = 70;
 module_param(temp_threshold, int, 0755);
 
-#ifdef CONFIG_THERMAL_CPU_FREQ
-	extern uint32_t thermal_min_freq;
-	extern uint32_t thermal_max_freq;
-	extern uint32_t thermal_user_min_freq;
-	extern uint32_t thermal_user_max_freq;
-#endif
+extern uint32_t thermal_min_freq;
+extern uint32_t thermal_max_freq;
+extern uint32_t thermal_user_min_freq;
+extern uint32_t thermal_user_max_freq;
 
 static struct thermal_info {
 	uint32_t cpuinfo_max_freq;

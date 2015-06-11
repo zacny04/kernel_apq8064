@@ -42,12 +42,10 @@ struct cpufreq_work_struct {
 static DEFINE_PER_CPU(struct cpufreq_work_struct, cpufreq_work);
 static struct workqueue_struct *msm_cpufreq_wq;
 
-#ifdef CONFIG_THERMAL_CPU_FREQ
 uint32_t thermal_min_freq = 384000;
 uint32_t thermal_max_freq = 1512000;
 uint32_t thermal_user_min_freq = 384000;
 uint32_t thermal_user_max_freq = 1512000;
-#endif
 
 /* maxscroff */
 uint32_t maxscroff_freq = 810000;
