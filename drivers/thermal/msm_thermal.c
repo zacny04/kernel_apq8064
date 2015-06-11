@@ -25,7 +25,7 @@
 #include <linux/of.h>
 #include <mach/cpufreq.h>
 
-static unsigned int temp_threshold = 70;
+static unsigned int temp_threshold = 65;
 module_param(temp_threshold, int, 0755);
 
 extern uint32_t thermal_min_freq;
