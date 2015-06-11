@@ -25,8 +25,11 @@
 #include <linux/of.h>
 #include <mach/cpufreq.h>
 
-unsigned int temp_threshold = 65;
+static unsigned int temp_threshold = 65;
 module_param(temp_threshold, int, 0755);
+
+static unsigned int temp_scan_interval = 250;
+module_param(temp_scan_interval, int, 0755);
 
 static struct thermal_info {
 	uint32_t cpuinfo_max_freq;
@@ -142,7 +145,7 @@ static void check_temp(struct work_struct *work)
 	}
 
 reschedule:
-	schedule_delayed_work_on(0, &check_temp_work, msecs_to_jiffies(250));
+	schedule_delayed_work_on(0, &check_temp_work, msecs_to_jiffies(temp_scan_interval));
 }
 
 int __devinit msm_thermal_init(struct msm_thermal_data *pdata)
