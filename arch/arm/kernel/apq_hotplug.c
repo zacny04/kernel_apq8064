@@ -24,7 +24,7 @@
 
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
-#include <linux/earlysuspend.h>
+#include <linux/powersuspend.h>
 #include <linux/init.h>
 #include <linux/jiffies.h>
 #include <linux/printk.h>
@@ -70,7 +70,7 @@ static inline void online_all_fn(struct work_struct *work)
 	}
 }
 
-static void apq_hotplug_early_suspend(struct early_suspend *h)
+static void apq_hotplug_power_suspend(struct power_suspend *h)
 {
 	/*
 	 * Init new work on the first suspend call,
@@ -95,7 +95,7 @@ static void apq_hotplug_early_suspend(struct early_suspend *h)
 					msecs_to_jiffies(suspend_delay));
 }
 
-static void apq_hotplug_late_resume(struct early_suspend *h)
+static void apq_hotplug_late_resume(struct power_suspend *h)
 {
 	/* Clear the workqueue */
 	cancel_delayed_work_sync(&offline_all_work);
@@ -106,9 +106,8 @@ static void apq_hotplug_late_resume(struct early_suspend *h)
 					msecs_to_jiffies(resume_delay));
 }
 
-static struct early_suspend __refdata apq_hotplug_early_suspend_handler = {
-	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
-	.suspend = apq_hotplug_early_suspend,
+static struct power_suspend __refdata apq_hotplug_power_suspend_handler = {
+	.suspend = apq_hotplug_power_suspend,
 	.resume = apq_hotplug_late_resume,
 };
 
@@ -121,7 +120,7 @@ static int __init apq_hotplug_init(void)
 		return -ENOMEM;
 	}
 
-	register_early_suspend(&apq_hotplug_early_suspend_handler);
+	register_power_suspend(&apq_hotplug_power_suspend_handler);
 
 	/*
 	 * Increment boot_flag to allow skipping of clearing work on
@@ -145,7 +144,7 @@ static void __exit apq_hotplug_exit(void)
 	flush_workqueue(apq_hotplug_wq);
 	destroy_workqueue(apq_hotplug_wq);
 
-	unregister_early_suspend(&apq_hotplug_early_suspend_handler);
+	unregister_power_suspend(&apq_hotplug_power_suspend_handler);
 }
 
 late_initcall(apq_hotplug_init);
