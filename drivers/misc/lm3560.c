@@ -1686,7 +1686,7 @@ static int lm3560_idle(struct device *dev)
 #define lm3560_idle NULL
 #endif
 
-#ifdef CONFIG_PM_SLEEP
+/* #ifdef CONFIG_PM_SLEEP
 static int lm3560_suspend_sleep(struct device *dev)
 {
 	int rc;
@@ -1718,7 +1718,7 @@ static int lm3560_resume_sleep(struct device *dev)
 #else
 #define lm3560_suspend_sleep NULL
 #define lm3560_resume_sleep NULL
-#endif
+#endif */
 
 static const struct dev_pm_ops lm3560_pm = {
 	// humberos: make torch usable on screen off
