@@ -371,11 +371,9 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-		   -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
-		   -Wno-sizeof-pointer-memaccess \
+		   -funswitch-loops -Wno-sizeof-pointer-memaccess \
 		   -fmodulo-sched -fmodulo-sched-allow-regmoves \
-		   -mfpu=neon-vfpv4 -mtune=cortex-a15  -mcpu=cortex-a15 \
-		   -Wno-array-bounds -Wno-uninitialized
+		   -Wno-array-bounds -Wno-uninitialized $(KERNELFLAGS)
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
