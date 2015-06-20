@@ -373,7 +373,9 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-delete-null-pointer-checks \
 		   -funswitch-loops -Wno-sizeof-pointer-memaccess \
 		   -fmodulo-sched -fmodulo-sched-allow-regmoves \
-		   -Wno-array-bounds -Wno-uninitialized $(KERNELFLAGS)
+		   -Wno-array-bounds -Wno-uninitialized \
+		   --param l1-cache-size=16 --param l1-cache-line-size=16 --param l2-cache-size=2048 \
+		   $(KERNELFLAGS)
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
