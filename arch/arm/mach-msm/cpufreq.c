@@ -17,6 +17,7 @@
  *
  */
 
+
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/cpufreq.h>
@@ -41,13 +42,6 @@ struct cpufreq_work_struct {
 
 static DEFINE_PER_CPU(struct cpufreq_work_struct, cpufreq_work);
 static struct workqueue_struct *msm_cpufreq_wq;
-
-#ifdef CONFIG_THERMAL_CPU_FREQ
-uint32_t thermal_min_freq = 384000;
-uint32_t thermal_max_freq = 1512000;
-uint32_t thermal_user_min_freq = 384000;
-uint32_t thermal_user_max_freq = 1512000;
-#endif
 
 /* maxscroff */
 uint32_t maxscroff_freq = 810000;
@@ -313,14 +307,6 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 #ifdef CONFIG_MSM_CPU_FREQ_SET_MIN_MAX
 	policy->min = CONFIG_MSM_CPU_FREQ_MIN;
 	policy->max = CONFIG_MSM_CPU_FREQ_MAX;
-#endif
-
-#ifdef CONFIG_THERMAL_CPU_FREQ
-	thermal_min_freq = policy->min;
-	thermal_max_freq = policy->max;
-	thermal_user_min_freq = policy->cpuinfo.min_freq;
-	thermal_user_max_freq = policy->cpuinfo.max_freq;
-	ex_max_freq = policy->cpuinfo.max_freq;
 #endif
 
 	cur_freq = acpuclk_get_rate(policy->cpu);

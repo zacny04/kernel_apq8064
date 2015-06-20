@@ -25,15 +25,8 @@
 #include <linux/of.h>
 #include <mach/cpufreq.h>
 
-static unsigned int temp_threshold = 70;
+unsigned int temp_threshold = 65;
 module_param(temp_threshold, int, 0755);
-
-#ifdef CONFIG_THERMAL_CPU_FREQ
-	extern uint32_t thermal_min_freq;
-	extern uint32_t thermal_max_freq;
-	extern uint32_t thermal_user_min_freq;
-	extern uint32_t thermal_user_max_freq;
-#endif
 
 static struct thermal_info {
 	uint32_t cpuinfo_max_freq;
@@ -50,16 +43,16 @@ static struct thermal_info {
 };
 
 enum thermal_freqs {
-	FREQ_HELL	= 702000,
-	FREQ_VERY_HOT	= 918000,
-	FREQ_HOT	= 1026000,
-	FREQ_WARM	= 1242000,
+	FREQ_HELL 	  = 702000,
+	FREQ_VERY_HOT = 918000,
+	FREQ_HOT 	  = 1026000,
+	FREQ_WARM 	  = 1242000,
 };
 
 enum threshold_levels {
-	LEVEL_HELL	= 12,
-	LEVEL_VERY_HOT	= 9,
-	LEVEL_HOT	= 5,
+	LEVEL_HELL 	   = 12,
+	LEVEL_VERY_HOT = 9,
+	LEVEL_HOT 	   = 5,
 };
 
 static struct msm_thermal_data msm_thermal_info;
@@ -117,10 +110,6 @@ static void check_temp(struct work_struct *work)
 	struct tsens_device tsens_dev;
 	uint32_t freq = 0;
 	long temp = 0;
-
-#ifdef CONFIG_THERMAL_CPU_FREQ
-	info.cpuinfo_max_freq = thermal_user_max_freq;
-#endif
 
 	tsens_dev.sensor_num = 0;
 	tsens_get_temp(&tsens_dev, &temp);
