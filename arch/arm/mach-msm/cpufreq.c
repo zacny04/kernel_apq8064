@@ -313,11 +313,13 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	policy->max = CONFIG_MSM_CPU_FREQ_MAX;
 #endif
 
+#ifdef CONFIG_THERMAL_CPU_FREQ
 	thermal_min_freq = policy->min;
 	thermal_max_freq = policy->max;
 	thermal_user_min_freq = policy->cpuinfo.min_freq;
 	thermal_user_max_freq = policy->cpuinfo.max_freq;
 	ex_max_freq = policy->cpuinfo.max_freq;
+#endif
 
 	cur_freq = acpuclk_get_rate(policy->cpu);
 	if (cpufreq_frequency_table_target(policy, table, cur_freq,
