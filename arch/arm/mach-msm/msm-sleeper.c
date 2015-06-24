@@ -49,7 +49,7 @@ static void msm_sleeper_late_resume(struct power_suspend *h)
 
 	if (!limit_set)
 		return;
-	restore_ex_max_freq();
+
 	for_each_possible_cpu(cpu) {
 		msm_cpufreq_set_freq_limits(cpu, MSM_CPUFREQ_NO_LIMIT, ex_max_freq);
 		pr_info("msm-sleeper: restore max frequency to %d.\n", ex_max_freq);
