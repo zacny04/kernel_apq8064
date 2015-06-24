@@ -31,6 +31,8 @@ module_param(temp_threshold, int, 0755);
 static unsigned int temp_scan_interval = 250;
 module_param(temp_scan_interval, int, 0755);
 
+extern uint32_t ex_max_freq;
+
 static struct thermal_info {
 	uint32_t cpuinfo_max_freq;
 	uint32_t limited_max_freq;
@@ -121,6 +123,8 @@ static void check_temp(struct work_struct *work)
 	{
 		if (temp < (temp_threshold - info.safe_diff))
 		{
+		        restore_ex_max_freq();
+			info.cpuinfo_max_freq = ex_max_freq;
 			limit_cpu_freqs(info.cpuinfo_max_freq);
 			info.throttling = false;
 			goto reschedule;

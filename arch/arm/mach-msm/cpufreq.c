@@ -69,7 +69,7 @@ uint32_t maxscroff_freq = 729600;
 uint32_t maxscroff = 0; 
 
 /* ex max freq */
-uint32_t ex_max_freq;
+uint32_t ex_max_freq = 0;
 
 struct cpufreq_suspend_t {
 	struct mutex suspend_mutex;
@@ -538,10 +538,20 @@ static struct notifier_block msm_cpufreq_pm_notifier = {
 
 /** max freq interface **/
 
+void restore_ex_max_freq(void)
+{
+	struct cpufreq_policy policy;
+	int ret;
+	ret = cpufreq_get_policy(&policy, 0);
+	ex_max_freq = policy.cpuinfo.max_freq;
+}
+
+EXPORT_SYMBOL(restore_ex_max_freq);
+
 static ssize_t show_ex_max_freq(struct cpufreq_policy *policy, char *buf)
 {
 	if (!ex_max_freq)
-		ex_max_freq = policy->max;
+		ex_max_freq = policy->cpuinfo.max_freq;
 
 	return sprintf(buf, "%u\n", ex_max_freq);
 }
