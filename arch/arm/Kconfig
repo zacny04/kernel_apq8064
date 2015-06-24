@@ -1686,7 +1686,7 @@ config ASMP
 config APQ_HOTPLUG
 	bool "Multicore hotplug driver"
 	depends on PM
-	default y
+	default n
 	help
 	  Hotplug CPUs on suspend/resume
 
