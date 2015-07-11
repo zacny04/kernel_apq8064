@@ -28,7 +28,7 @@
 static unsigned int temp_threshold = 65;
 module_param(temp_threshold, int, 0755);
 
-static unsigned int temp_scan_interval = 250;
+static unsigned int temp_scan_interval = 500;
 module_param(temp_scan_interval, int, 0755);
 
 extern uint32_t ex_max_freq;
