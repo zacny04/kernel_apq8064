@@ -164,7 +164,7 @@ static void asmp_late_resume(struct power_suspend *h) {
 	pr_info(ASMP_TAG"resumed\n");
 }
 
-static struct power_suspend __refdata asmp_power_suspend_handler = {
+static struct power_suspend asmp_power_suspend_handler = {
 	.suspend = asmp_power_suspend,
 	.resume = asmp_late_resume,
 };
