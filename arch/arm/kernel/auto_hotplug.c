@@ -34,7 +34,7 @@
 #include <linux/workqueue.h>
 #include <linux/sched.h>
 
-#ifdef CONFIG_HAS_POWERSUSPEND
+#ifdef CONFIG_POWERSUSPEND
 #include <linux/powersuspend.h>
 #endif
 
@@ -403,7 +403,7 @@ inline void hotplug_boostpulse(void)
 	}
 }
 
-#ifdef CONFIG_HAS_POWERSUSPEND
+#ifdef CONFIG_POWERSUSPEND
 static void auto_hotplug_power_suspend(struct power_suspend *handler)
 {
 	#ifdef DEBUG
@@ -436,7 +436,7 @@ static struct power_suspend auto_hotplug_suspend = {
 	.suspend = auto_hotplug_power_suspend,
 	.resume = auto_hotplug_late_resume,
 };
-#endif /* CONFIG_HAS_POWERSUSPEND */
+#endif /* CONFIG_POWERSUSPEND */
 
 int __init auto_hotplug_init(void)
 {
@@ -461,7 +461,7 @@ int __init auto_hotplug_init(void)
 	schedule_delayed_work_on(0, &hotplug_decision_work, HZ * 5);
 	schedule_delayed_work(&hotplug_unpause_work, HZ * 10);
 
-#ifdef CONFIG_HAS_POWERSUSPEND
+#ifdef CONFIG_POWERSUSPEND
 	register_power_suspend(&auto_hotplug_suspend);
 #endif
 	return 0;
