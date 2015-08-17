@@ -17,8 +17,6 @@
 #include <linux/delay.h>
 #include <linux/workqueue.h>
 #include <linux/kmod.h>
-#include <linux/wakelock.h>
-#include "power.h"
 
 /* 
  * Timeout for stopping processes
@@ -97,10 +95,10 @@ static int try_to_freeze_tasks(bool user_only)
 
 	if (todo) {
 		printk("\n");
-		printk(KERN_ERR "Freezing of tasks %s after %d.%03d seconds "
+		printk(KERN_ERR "Freezing of tasks %s after %d.%02d seconds "
 		       "(%d tasks refusing to freeze, wq_busy=%d):\n",
 		       wakeup ? "aborted" : "failed",
-		       elapsed_msecs / 1000, elapsed_msecs % 1000,
+		       elapsed_csecs / 100, elapsed_csecs % 100,
 		       todo - wq_busy, wq_busy);
 
 		if (!wakeup) {
