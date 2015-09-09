@@ -130,7 +130,7 @@ static int msm_ipc_router_smd_remote_write_avail(
 	return smd_write_avail(smd_xprtp->channel);
 }
 
-static int is_ss_reset(struct msm_ipc_router_smd_xprt *smd_xprtp)
+static int __attribute__((unused)) is_ss_reset(struct msm_ipc_router_smd_xprt *smd_xprtp)
 {
 	unsigned long flags;
 	spin_lock_irqsave(&smd_xprtp->ss_reset_lock, flags);
