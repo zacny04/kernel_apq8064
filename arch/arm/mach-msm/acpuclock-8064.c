@@ -101,15 +101,25 @@ static struct scalable scalable[] __initdata = {
 */
 static struct msm_bus_paths bw_level_tbl[] __initdata = {
 #ifdef CONFIG_GPU_OVERCLOCK
+#ifdef CONFIG_GPU_OVERCLOCK_450
 	[0] =  BW_MBPS(640), /* At least  80 MHz on bus. */
 	[1] = BW_MBPS(1064), /* At least 133 MHz on bus. */
 	[2] = BW_MBPS(1600), /* At least 200 MHz on bus. */
 	[3] = BW_MBPS(2128), /* At least 266 MHz on bus. */
-	[4] = BW_MBPS(3200), /* At least 400 MHz on bus. */
+	[4] = BW_MBPS(3600), /* At least 450 MHz on bus. */
 	[5] = BW_MBPS(4264), /* At least 533 MHz on bus. */
-	[6] = BW_MBPS(5290), /* At least 533 MHz on bus. */
+	[6] = BW_MBPS(4664), /* At least 583 MHz on bus. */
 #else
-    [0] = BW_MBPS(640), /* At least  80 MHz on bus. */
+	[0] =  BW_MBPS(640), /* At least  80 MHz on bus. */
+	[1] = BW_MBPS(1064), /* At least 133 MHz on bus. */
+	[2] = BW_MBPS(1600), /* At least 200 MHz on bus. */
+	[3] = BW_MBPS(2128), /* At least 266 MHz on bus. */
+	[4] = BW_MBPS(3900), /* At least 487.5 MHz on bus. */
+	[5] = BW_MBPS(4264), /* At least 533 MHz on bus. */
+	[6] = BW_MBPS(4664), /* At least 583 MHz on bus. */
+#endif
+#else
+	[0] =  BW_MBPS(640), /* At least  80 MHz on bus. */
 	[1] = BW_MBPS(1064), /* At least 133 MHz on bus. */
 	[2] = BW_MBPS(1600), /* At least 200 MHz on bus. */
 	[3] = BW_MBPS(2128), /* At least 266 MHz on bus. */
