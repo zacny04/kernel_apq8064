@@ -3588,6 +3588,10 @@ static struct clk_freq_tbl clk_tbl_gfx3d_8960[] = {
 	F_GFX3D(300000000, pll3, 1,  4),
 	F_GFX3D(320000000, pll2, 2,  5),
 	F_GFX3D(400000000, pll2, 1,  2),
+#ifdef CONFIG_GPU_OVERCLOCK
+	F_GFX3D(450000000, pll15, 1,  2),
+	F_GFX3D(487500000, pll15, 1,  2),
+#endif
 	F_END
 };
 
@@ -3689,8 +3693,16 @@ static struct rcg_clk gfx3d_clk = {
 	.c = {
 		.dbg_name = "gfx3d_clk",
 		.ops = &clk_ops_rcg,
-		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 300000000,
+		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 325000000,
+#ifdef CONFIG_GPU_OVERCLOCK
+#ifdef CONFIG_GPU_OVERCLOCK_450
+				  HIGH, 450000000),
+#else
+				  HIGH, 487500000),
+#endif
+#else
 				  HIGH, 400000000),
+#endif
 		CLK_INIT(gfx3d_clk.c),
 		.depends = &gmem_axi_clk.c,
 	},
@@ -6642,23 +6654,43 @@ static void __init reg_init(void)
 		if (!readl_relaxed(PRNG_CLK_NS_REG))
 			writel_relaxed(0x2B, PRNG_CLK_NS_REG);
 	}
-#ifdef CONFIG_GPU_OVERCLOCK_450
+#ifdef CONFIG_GPU_OVERCLOCK
 	if (cpu_is_apq8064aa()) {
-#else
-	if (cpu_is_apq8064() || cpu_is_apq8064aa()) {
-#endif
-		/* Program PLL15 to 975MHz with ref clk = 27MHz */
-		configure_sr_pll(&pll15_config, &pll15_regs, 0);
 #ifdef CONFIG_GPU_OVERCLOCK_450
-	} else if (cpu_is_apq8064() || cpu_is_apq8064ab()) {
-#else
-	} else if (cpu_is_apq8064ab()) {
-#endif
 		/* Program PLL15 to 900MHZ */
 		pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
 		pll15_config.m = 0x1;
 		pll15_config.n = 0x3;
 		configure_sr_pll(&pll15_config, &pll15_regs, 0);
+#else
+		/* Program PLL15 to 975MHz with ref clk = 27MHz */
+		configure_sr_pll(&pll15_config, &pll15_regs, 0);
+#endif
+#else
+	if (cpu_is_apq8064() || cpu_is_apq8064aa()) {
+		/* Program PLL15 to 975MHz with ref clk = 27MHz */
+		configure_sr_pll(&pll15_config, &pll15_regs, 0);
+#endif
+#ifdef CONFIG_GPU_OVERCLOCK
+	} else if (cpu_is_apq8064() || cpu_is_apq8064ab()) {
+#ifdef CONFIG_GPU_OVERCLOCK_450
+		/* Program PLL15 to 900MHZ */
+		pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
+		pll15_config.m = 0x1;
+		pll15_config.n = 0x3;
+		configure_sr_pll(&pll15_config, &pll15_regs, 0);
+#else
+		/* Program PLL15 to 975MHz with ref clk = 27MHz */
+		configure_sr_pll(&pll15_config, &pll15_regs, 0);
+#endif
+#else
+	} else if (cpu_is_apq8064ab()) {
+		/* Program PLL15 to 900MHZ */
+		pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
+		pll15_config.m = 0x1;
+		pll15_config.n = 0x3;
+		configure_sr_pll(&pll15_config, &pll15_regs, 0);
+#endif
 	}
 
 	/*
