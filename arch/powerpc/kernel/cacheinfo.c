@@ -62,11 +62,21 @@ struct cache_type_info {
 };
 
 /* These are used to index the cache_type_info array. */
-#define CACHE_TYPE_UNIFIED     0
-#define CACHE_TYPE_INSTRUCTION 1
-#define CACHE_TYPE_DATA        2
+#define CACHE_TYPE_UNIFIED     0 /* cache-size, cache-block-size, etc. */
+#define CACHE_TYPE_UNIFIED_D   1 /* d-cache-size, d-cache-block-size, etc */
+#define CACHE_TYPE_INSTRUCTION 2
+#define CACHE_TYPE_DATA        3
 
 static const struct cache_type_info cache_type_info[] = {
+	{
+		/* Embedded systems that use cache-size, cache-block-size,
+		 * etc. for the Unified (typically L2) cache. */
+		.name            = "Unified",
+		.size_prop       = "cache-size",
+		.line_size_props = { "cache-line-size",
+				     "cache-block-size", },
+		.nr_sets_prop    = "cache-sets",
+	},
 	{
 		/* PowerPC Processor binding says the [di]-cache-*
 		 * must be equal on unified caches, so just use
@@ -131,7 +141,7 @@ static const char *cache_type_string(const struct cache *cache)
 	return cache_type_info[cache->type].name;
 }
 
-static void cache_init(struct cache *cache, int type, int level, struct device_node *ofnode)
+static void __cpuinit cache_init(struct cache *cache, int type, int level, struct device_node *ofnode)
 {
 	cache->type = type;
 	cache->level = level;
@@ -140,7 +150,7 @@ static void cache_init(struct cache *cache, int type, int level, struct device_n
 	list_add(&cache->list, &cache_list);
 }
 
-static struct cache *new_cache(int type, int level, struct device_node *ofnode)
+static struct cache *__cpuinit new_cache(int type, int level, struct device_node *ofnode)
 {
 	struct cache *cache;
 
@@ -293,7 +303,8 @@ static struct cache *cache_find_first_sibling(struct cache *cache)
 {
 	struct cache *iter;
 
-	if (cache->type == CACHE_TYPE_UNIFIED)
+	if (cache->type == CACHE_TYPE_UNIFIED ||
+	    cache->type == CACHE_TYPE_UNIFIED_D)
 		return cache;
 
 	list_for_each_entry(iter, &cache_list, list)
@@ -324,18 +335,30 @@ static bool cache_node_is_unified(const struct device_node *np)
 	return of_get_property(np, "cache-unified", NULL);
 }
 
-static struct cache *cache_do_one_devnode_unified(struct device_node *node, int level)
+/*
+ * Unified caches can have two different sets of tags.  Most embedded
+ * use cache-size, etc. for the unified cache size, but open firmware systems
+ * use d-cache-size, etc.   Check on initialization for which type we have, and
+ * return the appropriate structure type.  Assume it's embedded if it isn't
+ * open firmware.  If it's yet a 3rd type, then there will be missing entries
+ * in /sys/devices/system/cpu/cpu0/cache/index2/, and this code will need
+ * to be extended further.
+ */
+static int cache_is_unified_d(const struct device_node *np)
 {
-	struct cache *cache;
-
-	pr_debug("creating L%d ucache for %s\n", level, node->full_name);
-
-	cache = new_cache(CACHE_TYPE_UNIFIED, level, node);
-
-	return cache;
+	return of_get_property(np,
+		cache_type_info[CACHE_TYPE_UNIFIED_D].size_prop, NULL) ?
+		CACHE_TYPE_UNIFIED_D : CACHE_TYPE_UNIFIED;
 }
 
-static struct cache *cache_do_one_devnode_split(struct device_node *node, int level)
+static struct cache *__cpuinit cache_do_one_devnode_unified(struct device_node *node, int level)
+{
+	pr_debug("creating L%d ucache for %s\n", level, node->full_name);
+
+	return new_cache(cache_is_unified_d(node), level, node);
+}
+
+static struct cache *__cpuinit cache_do_one_devnode_split(struct device_node *node, int level)
 {
 	struct cache *dcache, *icache;
 
@@ -357,7 +380,7 @@ err:
 	return NULL;
 }
 
-static struct cache *cache_do_one_devnode(struct device_node *node, int level)
+static struct cache *__cpuinit cache_do_one_devnode(struct device_node *node, int level)
 {
 	struct cache *cache;
 
@@ -369,7 +392,7 @@ static struct cache *cache_do_one_devnode(struct device_node *node, int level)
 	return cache;
 }
 
-static struct cache *cache_lookup_or_instantiate(struct device_node *node, int level)
+static struct cache *__cpuinit cache_lookup_or_instantiate(struct device_node *node, int level)
 {
 	struct cache *cache;
 
@@ -385,7 +408,7 @@ static struct cache *cache_lookup_or_instantiate(struct device_node *node, int l
 	return cache;
 }
 
-static void link_cache_lists(struct cache *smaller, struct cache *bigger)
+static void __cpuinit link_cache_lists(struct cache *smaller, struct cache *bigger)
 {
 	while (smaller->next_local) {
 		if (smaller->next_local == bigger)
@@ -396,13 +419,13 @@ static void link_cache_lists(struct cache *smaller, struct cache *bigger)
 	smaller->next_local = bigger;
 }
 
-static void do_subsidiary_caches_debugcheck(struct cache *cache)
+static void __cpuinit do_subsidiary_caches_debugcheck(struct cache *cache)
 {
 	WARN_ON_ONCE(cache->level != 1);
 	WARN_ON_ONCE(strcmp(cache->ofnode->type, "cpu"));
 }
 
-static void do_subsidiary_caches(struct cache *cache)
+static void __cpuinit do_subsidiary_caches(struct cache *cache)
 {
 	struct device_node *subcache_node;
 	int level = cache->level;
@@ -423,7 +446,7 @@ static void do_subsidiary_caches(struct cache *cache)
 	}
 }
 
-static struct cache *cache_chain_instantiate(unsigned int cpu_id)
+static struct cache *__cpuinit cache_chain_instantiate(unsigned int cpu_id)
 {
 	struct device_node *cpu_node;
 	struct cache *cpu_cache = NULL;
@@ -448,7 +471,7 @@ out:
 	return cpu_cache;
 }
 
-static struct cache_dir *cacheinfo_create_cache_dir(unsigned int cpu_id)
+static struct cache_dir *__cpuinit cacheinfo_create_cache_dir(unsigned int cpu_id)
 {
 	struct cache_dir *cache_dir;
 	struct device *dev;
@@ -653,7 +676,7 @@ static struct kobj_type cache_index_type = {
 	.default_attrs = cache_index_default_attrs,
 };
 
-static void cacheinfo_create_index_opt_attrs(struct cache_index_dir *dir)
+static void __cpuinit cacheinfo_create_index_opt_attrs(struct cache_index_dir *dir)
 {
 	const char *cache_name;
 	const char *cache_type;
@@ -696,7 +719,7 @@ static void cacheinfo_create_index_opt_attrs(struct cache_index_dir *dir)
 	kfree(buf);
 }
 
-static void cacheinfo_create_index_dir(struct cache *cache, int index, struct cache_dir *cache_dir)
+static void __cpuinit cacheinfo_create_index_dir(struct cache *cache, int index, struct cache_dir *cache_dir)
 {
 	struct cache_index_dir *index_dir;
 	int rc;
@@ -722,7 +745,7 @@ err:
 	kfree(index_dir);
 }
 
-static void cacheinfo_sysfs_populate(unsigned int cpu_id, struct cache *cache_list)
+static void __cpuinit cacheinfo_sysfs_populate(unsigned int cpu_id, struct cache *cache_list)
 {
 	struct cache_dir *cache_dir;
 	struct cache *cache;
@@ -740,7 +763,7 @@ static void cacheinfo_sysfs_populate(unsigned int cpu_id, struct cache *cache_li
 	}
 }
 
-void cacheinfo_cpu_online(unsigned int cpu_id)
+void __cpuinit cacheinfo_cpu_online(unsigned int cpu_id)
 {
 	struct cache *cache;
 
