@@ -799,12 +799,7 @@ static inline int avc_operation_audit(u32 ssid, u32 tsid, u16 tclass,
 	if (likely(!audited))
 		return 0;
 	return slow_avc_audit(ssid, tsid, tclass, requested,
-			      audited, denied, ad, 
-#ifdef CONFIG_SECURITY_SELINUX_AVC_EXTRA_INFO
-		0, result);
-#else
-		0);
-#endif
+			      audited, denied, result, ad, 0);
 }
 
 /**
