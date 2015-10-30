@@ -2453,6 +2453,7 @@ rebalance:
 	if (test_thread_flag(TIF_MEMDIE) && !(gfp_mask & __GFP_NOFAIL))
 		goto nopage;
 
+#ifdef CONFIG_DIRECT_RECLAIM_ALLOW_COMPACTION
 	/*
 	 * Try direct compaction. The first pass is asynchronous. Subsequent
 	 * attempts after direct reclaim are synchronous
@@ -2466,6 +2467,7 @@ rebalance:
 					&did_some_progress);
 	if (page)
 		goto got_pg;
+#endif /* CONFIG_DIRECT_RECLAIM_ALLOW_COMPACTION */
 	sync_migration = true;
 
 	/*
@@ -3330,8 +3332,8 @@ static int default_zonelist_order(void)
 			z = &NODE_DATA(nid)->node_zones[zone_type];
 			if (populated_zone(z)) {
 				if (zone_type < ZONE_NORMAL)
-					low_kmem_size += z->present_pages;
-				total_size += z->present_pages;
+					low_kmem_size += z->managed_pages;
+				total_size += z->managed_pages;
 			} else if (zone_type == ZONE_NORMAL) {
 				/*
 				 * If any node has only lowmem, then node order
@@ -5274,6 +5276,7 @@ void setup_per_zone_wmarks(void)
  */
 static void __meminit calculate_zone_inactive_ratio(struct zone *zone)
 {
+#ifndef CONFIG_ZSWAP
 	unsigned int gb, ratio;
 
 	/* Zone size in gigabytes */
@@ -5284,6 +5287,9 @@ static void __meminit calculate_zone_inactive_ratio(struct zone *zone)
 		ratio = 1;
 
 	zone->inactive_ratio = ratio;
+#else
+	zone->inactive_ratio = 1;
+#endif
 }
 
 static void __meminit setup_per_zone_inactive_ratio(void)

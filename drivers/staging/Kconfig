@@ -140,4 +140,6 @@ source "drivers/staging/media/Kconfig"
 
 source "drivers/staging/cpupower/Kconfig" 
 
+source "drivers/staging/vnswap/Kconfig"
+
 endif # STAGING
