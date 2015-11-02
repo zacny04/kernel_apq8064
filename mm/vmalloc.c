@@ -2650,5 +2650,6 @@ static int __init proc_vmalloc_init(void)
 	return 0;
 }
 module_init(proc_vmalloc_init);
+
 #endif
 
