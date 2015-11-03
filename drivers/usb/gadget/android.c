@@ -80,9 +80,6 @@
 #else
 #define USB_ETH_RNDIS y
 #include "f_rndis.c"
-#ifdef CONFIG_USB_ANDROID_NCM
-#include "f_ncm.c"
-#endif
 #include "rndis.c"
 #endif
 #include "u_ether.c"
@@ -2091,9 +2088,6 @@ static struct android_usb_function *supported_functions[] = {
 	&audio_source_function,
 	&midi_function,
 	&uasp_function,
-#ifdef CONFIG_USB_ANDROID_NCM
-	&ncm_function,
-#endif
 #ifdef CONFIG_USB_ANDROID_DTF
 	&dtf_function,
 #endif /* CONFIG_USB_ANDROID_DTF */
