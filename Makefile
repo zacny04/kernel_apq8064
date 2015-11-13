@@ -249,7 +249,7 @@ GRAPHITE_FLAGS = -fgraphite -fgraphite-identity -floop-flatten -ftree-loop-linea
 
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -fgcse-las -std=gnu89
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -fgcse-las -std=gnu89 -fopenmp
 HOSTCFLAGS   += $(GRAPHITE_FLAGS)
 HOSTCXXFLAGS = -Ofast -fgcse-las
 HOSTCXXFLAGS += $(GRAPHITE_FLAGS)
@@ -360,7 +360,7 @@ CC		= $(srctree)/scripts/gcc-wrapper.py $(REAL_CC)
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
 
-KERNELFLAGS	= -DNDEBUG -munaligned-access -fforce-addr -fsingle-precision-constant -mcpu=cortex-a15 -mtune=cortex-a15 -marm -mfpu=neon-vfpv4 -fgcse-las
+KERNELFLAGS	= -DNDEBUG -munaligned-access -fforce-addr -fsingle-precision-constant -mcpu=cortex-a15 -mtune=cortex-a15 -marm -mfpu=neon-vfpv4 -fgcse-las -fopenmp
 MODFLAGS	= -DMODULE $(KERNELFLAGS)
 CFLAGS_MODULE   = $(MODFLAGS)
 CFLAGS_MODULE   += $(GRAPHITE_FLAGS)
@@ -374,13 +374,15 @@ CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 # fall back to -march=armv7-a in case the compiler isn't compatible with -mcpu and -mtune
 ARM_ARCH_OPT := -mcpu=cortex-a15 -mtune=cortex-a15
 GEN_OPT_FLAGS := $(call cc-option,$(ARM_ARCH_OPT),-march=armv7-a) \
-        -g0 \
-        -DNDEBUG \
-        -fomit-frame-pointer \
-        -funsafe-math-optimizations \
+	-g0 \
+	-DNDEBUG \
+	-fomit-frame-pointer \
+	-funsafe-math-optimizations \
 	-fmodulo-sched \
 	-fmodulo-sched-allow-regmoves \
-	-fivopts
+	-fivopts \
+	-fno-semantic-interposition \
+	-flto-odr-type-merging
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
@@ -396,7 +398,7 @@ KBUILD_CFLAGS   := -Wall -DNDEBUG -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-		   -std=gnu89 \
+		   -std=gnu89 -fopenmp \
            $(GEN_OPT_FLAGS)
 
 KBUILD_CFLAGS   += $(GRAPHITE_FLAGS)
