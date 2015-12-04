@@ -40,10 +40,10 @@
 #define DEF_FREQUENCY_UP_THRESHOLD_MULTI_CORE		(80)	/* Yank555.lu : new */
 #define DEF_SAMPLING_DOWN_FACTOR			(2)	/* Yank555.lu : was 1 */
 #define MAX_SAMPLING_DOWN_FACTOR			(100000)
-#define DEF_INPUT_BOOST					(652800)/* Yank555.lu : new */
+#define DEF_INPUT_BOOST					(702000)/* Yank555.lu : new */
 #define DEF_IO_IS_BUSY					(1)	/* Yank555.lu : new */
-#define DEF_OPTIMAL_FREQUENCY				(960000)/* Yank555.lu : new */
-#define DEF_SYNC_FREQUENCY				(883200)/* Yank555.lu : new */
+#define DEF_OPTIMAL_FREQUENCY				(918000)/* Yank555.lu : new */
+#define DEF_SYNC_FREQUENCY				(810000)/* Yank555.lu : new */
 #define MICRO_FREQUENCY_DOWN_DIFFERENTIAL		(3)
 #define MICRO_FREQUENCY_DOWN_DIFFERENTIAL_MULTI_CORE	(3)	/* Yank555.lu : new */
 #define MICRO_FREQUENCY_UP_THRESHOLD			(95)
@@ -55,8 +55,8 @@
 #define STEP_UP
 #ifdef STEP_UP
 #define DEF_FREQ_STEP					(25)
-#define DEF_STEP_UP_EARLY_HISPEED			(652800)  /* Yank555.lu : was 1190400 */
-#define DEF_STEP_UP_INTERIM_HISPEED			(1190400) /* Yank555.lu : was 1728000 */
+#define DEF_STEP_UP_EARLY_HISPEED			(702000)  /* Yank555.lu : was 1134000 */
+#define DEF_STEP_UP_INTERIM_HISPEED			(1134000) /* Yank555.lu : was 1728000 */
 #define DEF_SAMPLING_EARLY_HISPEED_FACTOR		(2)
 #define DEF_SAMPLING_INTERIM_HISPEED_FACTOR		(3)
 #endif
@@ -88,8 +88,8 @@ freq_table_idx yank_pre_freq_idx[SUP_CORE_NUM] = {};
 
 #if defined(SMART_UP_SLOW_UP_AT_HIGH_FREQ)
 
-#define SUP_SLOW_UP_FREQUENCY 		(883200)  /* Yank555.lu : was 1574400 */
-#define SUP_HIGH_SLOW_UP_FREQUENCY 	(1190400) /* Yank555.lu : was 1728000 */
+#define SUP_SLOW_UP_FREQUENCY 		(810000)  /* Yank555.lu : was 1574400 */
+#define SUP_HIGH_SLOW_UP_FREQUENCY 	(1134000) /* Yank555.lu : was 1728000 */
 #define SUP_SLOW_UP_LOAD 		(95)      /* Yank555.lu : was 90 */
 
 typedef struct {
@@ -260,40 +260,6 @@ static struct dbs_tuners {
 #endif
 	.input_boost = DEF_INPUT_BOOST,
 };
-
-static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
-{
-	u64 idle_time;
-	u64 cur_wall_time;
-	u64 busy_time;
-
-	cur_wall_time = jiffies64_to_cputime64(get_jiffies_64());
-
-	busy_time  = kcpustat_cpu(cpu).cpustat[CPUTIME_USER];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_SYSTEM];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_IRQ];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_SOFTIRQ];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_STEAL];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_NICE];
-
-	idle_time = cur_wall_time - busy_time;
-	if (wall)
-		*wall = jiffies_to_usecs(cur_wall_time);
-
-	return jiffies_to_usecs(idle_time);
-}
-
-static inline cputime64_t get_cpu_idle_time(unsigned int cpu, cputime64_t *wall)
-{
-	u64 idle_time = get_cpu_idle_time_us(cpu, NULL);
-
-	if (idle_time == -1ULL)
-		return get_cpu_idle_time_jiffy(cpu, wall);
-	else
-		idle_time += get_cpu_iowait_time_us(cpu, wall);
-
-	return idle_time;
-}
 
 static inline cputime64_t get_cpu_iowait_time(unsigned int cpu, cputime64_t *wall)
 {
@@ -691,7 +657,7 @@ static ssize_t store_ignore_nice_load(struct kobject *a, struct attribute *b,
 		struct cpu_dbs_info_s *dbs_info;
 		dbs_info = &per_cpu(od_cpu_dbs_info, j);
 		dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-						&dbs_info->prev_cpu_wall);
+						&dbs_info->prev_cpu_wall, dbs_tuners_ins.io_is_busy);
 		if (dbs_tuners_ins.ignore_nice)
 			dbs_info->prev_cpu_nice = kcpustat_cpu(j).cpustat[CPUTIME_NICE];
 
@@ -1182,7 +1148,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 
 		j_dbs_info = &per_cpu(od_cpu_dbs_info, j);
 
-		cur_idle_time = get_cpu_idle_time(j, &cur_wall_time);
+		cur_idle_time = get_cpu_idle_time(j, &cur_wall_time, dbs_tuners_ins.io_is_busy);
 		cur_iowait_time = get_cpu_iowait_time(j, &cur_wall_time);
 
 		wall_time = (unsigned int)
@@ -1693,7 +1659,7 @@ static void dbs_refresh_callback(struct work_struct *work)
 			policy->cur = target_freq;
 
 		this_dbs_info->prev_cpu_idle = get_cpu_idle_time(cpu,
-				&this_dbs_info->prev_cpu_wall);
+				&this_dbs_info->prev_cpu_wall, dbs_tuners_ins.io_is_busy);
 	}
 
 bail_incorrect_governor:
@@ -1921,7 +1887,7 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 			j_dbs_info->cur_policy = policy;
 
 			j_dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-						&j_dbs_info->prev_cpu_wall);
+						&j_dbs_info->prev_cpu_wall, dbs_tuners_ins.io_is_busy);
 			if (dbs_tuners_ins.ignore_nice)
 				j_dbs_info->prev_cpu_nice =
 						kcpustat_cpu(j).cpustat[CPUTIME_NICE];
