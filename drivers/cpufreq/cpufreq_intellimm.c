@@ -12,6 +12,10 @@
  * published by the Free Software Foundation.
  */
 
+/*
+ For APQ8064 replace CONFIG_ARCH_MSM_CORTEXMP to CONFIG_MSM_SMP
+*/
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -937,7 +941,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 	this_dbs_info->freq_lo = 0;
 	policy = this_dbs_info->cur_policy;
 
-#ifdef CONFIG_ARCH_MSM_CORTEXMP
+#ifdef CONFIG_MSM_SMP
 	for (j = 1; j < NR_CPUS; j++) {
 		j_dbs_info = &per_cpu(imm_cpu_dbs_info, j);
 		if (j_dbs_info->prev_load && !cpu_online(j))
@@ -1242,7 +1246,7 @@ static void dbs_input_event(struct input_handle *handle, unsigned int type,
 
 		for_each_online_cpu(i)
 		{
-#ifdef CONFIG_ARCH_MSM_CORTEXMP
+#ifdef CONFIG_MSM_SMP
 			if (i != CPU0)
 				break;
 #endif
@@ -1529,7 +1533,7 @@ static int __init cpufreq_gov_dbs_init(void)
 		struct cpu_dbs_info_s *this_dbs_info =
 			&per_cpu(imm_cpu_dbs_info, i);
 
-#ifdef CONFIG_ARCH_MSM_CORTEXMP
+#ifdef CONFIG_MSM_SMP
 		if (i == CPU0)
 #endif
 		{
@@ -1559,7 +1563,7 @@ static void __exit cpufreq_gov_dbs_exit(void)
 	for_each_possible_cpu(i) {
 		struct cpu_dbs_info_s *this_dbs_info =
 			&per_cpu(imm_cpu_dbs_info, i);
-#ifdef CONFIG_ARCH_MSM_CORTEXMP
+#ifdef CONFIG_MSM_SMP
 		if (i == CPU0)
 #endif
 		if (per_cpu(up_task, i)) {
