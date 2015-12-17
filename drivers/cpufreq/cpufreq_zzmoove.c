@@ -32,7 +32,7 @@
 // #define DISABLE_POWER_MANAGEMENT
 
 // AP: use msm8974 lcd status notifier
-#define USE_LCD_NOTIFIER
+// #define USE_LCD_NOTIFIER
 
 #include <linux/cpu.h>
 #ifdef USE_LCD_NOTIFIER
@@ -55,7 +55,7 @@
 #include <linux/mutex.h>
 #if defined(CONFIG_POWERSUSPEND) && !defined(DISABLE_POWER_MANAGEMENT)
 #include <linux/powersuspend.h>
-#endif /* defined(CONFIG_HAS_EARLYSUSPEND)... */
+#endif /* defined(CONFIG_POWERSUSPEND)... */
 #include <linux/sched.h>
 #include <linux/tick.h>
 #include <linux/version.h>
@@ -87,7 +87,7 @@
 // #define SNAP_NATIVE_HOTPLUGGING
 
 // ZZ: enable for sources with backported cpufreq implementation of 3.10 kernel
-// #define CPU_IDLE_TIME_IN_CPUFREQ
+#define CPU_IDLE_TIME_IN_CPUFREQ
 
 // ZZ: enable/disable music limits
 #define ENABLE_MUSIC_LIMITS
