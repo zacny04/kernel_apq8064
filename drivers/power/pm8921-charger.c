@@ -2407,7 +2407,7 @@ static void __pm8921_charger_vbus_draw(unsigned int mA)
 			}
 		}
 		rc = pm_chg_iusbmax_set(the_chip, i);
-		pr_info("charge curent index => %d\n", i);
+		pr_debug("charge curent index => %d\n", i);
 #else
 		rc = pm_chg_iusbmax_set(the_chip, i);
 		if (rc)
