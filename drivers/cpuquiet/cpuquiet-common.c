@@ -41,8 +41,10 @@ static struct cpumask cr_offline_requests;
 
 static void cpuquiet_work_func(struct work_struct *work);
 
+#ifdef CONFIG_CPU_QUIET_STATS
 static int max_online_cpus;
 static int min_online_cpus;
+#endif /* CONFIG_CPU_QUIET_STATS */
 
 static int update_core_config(unsigned int cpunumber, bool up)
 {
