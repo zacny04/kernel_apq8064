@@ -444,4 +444,6 @@ void cpufreq_frequency_table_get_attr(struct cpufreq_frequency_table *table,
 
 void cpufreq_frequency_table_put_attr(unsigned int cpu);
 
+void restore_ex_max_freq(void);
+
 #endif /* _LINUX_CPUFREQ_H */

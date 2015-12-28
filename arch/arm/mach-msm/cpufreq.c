@@ -64,6 +64,9 @@ struct cpufreq_work_struct {
 static DEFINE_PER_CPU(struct cpufreq_work_struct, cpufreq_work);
 static struct workqueue_struct *msm_cpufreq_wq;
 
+/* ex max freq */
+uint32_t ex_max_freq = 0;
+
 struct cpufreq_suspend_t {
 	struct mutex suspend_mutex;
 	int device_suspended;
@@ -521,8 +524,74 @@ static struct notifier_block msm_cpufreq_pm_notifier = {
 	.notifier_call = msm_cpufreq_pm_event,
 };
 
+/** max freq interface **/
+
+void restore_ex_max_freq(void)
+{
+	struct cpufreq_policy policy;
+	int ret;
+	ret = cpufreq_get_policy(&policy, 0);
+	ex_max_freq = policy.cpuinfo.max_freq;
+}
+
+EXPORT_SYMBOL(restore_ex_max_freq);
+
+static ssize_t show_ex_max_freq(struct cpufreq_policy *policy, char *buf)
+{
+	if (!ex_max_freq)
+		ex_max_freq = policy->cpuinfo.max_freq;
+
+	return sprintf(buf, "%u\n", ex_max_freq);
+}
+
+static ssize_t store_ex_max_freq(struct cpufreq_policy *policy,
+		const char *buf, size_t count)
+{
+	unsigned int freq = 0;
+	int ret, cpu;
+	int index;
+	struct cpufreq_frequency_table *freq_table = cpufreq_frequency_get_table(policy->cpu);
+
+	if (!freq_table)
+		return -EINVAL;
+
+	ret = sscanf(buf, "%u", &freq);
+	if (ret != 1)
+		return -EINVAL;
+
+	mutex_lock(&per_cpu(cpufreq_suspend, policy->cpu).suspend_mutex);
+
+	ret = cpufreq_frequency_table_target(policy, freq_table, freq,
+			CPUFREQ_RELATION_H, &index);
+	if (ret)
+		goto out;
+
+	ex_max_freq = freq_table[index].frequency;
+
+	for_each_possible_cpu(cpu) {
+		msm_cpufreq_set_freq_limits(cpu, MSM_CPUFREQ_NO_LIMIT, ex_max_freq);
+	}
+	cpufreq_update_policy(cpu);
+
+	ret = count;
+
+out:
+	mutex_unlock(&per_cpu(cpufreq_suspend, policy->cpu).suspend_mutex);
+	return ret;
+}
+
+struct freq_attr msm_cpufreq_attr_ex_max_freq = {
+	.attr = { .name = "ex_max_freq",
+		.mode = 0666,
+	},
+	.show = show_ex_max_freq,
+	.store = store_ex_max_freq,
+};
+/** end max freq interface **/
+
 static struct freq_attr *msm_freq_attr[] = {
 	&cpufreq_freq_attr_scaling_available_freqs,
+	&msm_cpufreq_attr_ex_max_freq,
 	NULL,
 };
 
