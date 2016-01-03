@@ -249,7 +249,7 @@ GRAPHITE_FLAGS = -fgraphite -fgraphite-identity -floop-flatten -ftree-loop-linea
 
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -fgcse-las -std=gnu89 -fopenmp
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -fgcse-las -std=gnu89 -fopenmp -fno-pic
 HOSTCFLAGS   += $(GRAPHITE_FLAGS)
 HOSTCXXFLAGS = -Ofast -fgcse-las
 HOSTCXXFLAGS += $(GRAPHITE_FLAGS)
@@ -399,7 +399,7 @@ KBUILD_CFLAGS   := -Wall -DNDEBUG -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-		   -std=gnu89 -fopenmp \
+		   -std=gnu89 -fopenmp -fno-pic \
            $(GEN_OPT_FLAGS)
 
 KBUILD_CFLAGS   += $(GRAPHITE_FLAGS)
