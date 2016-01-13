@@ -2030,16 +2030,19 @@ static irqreturn_t synaptics_clearpad_hard_handler(int irq, void *dev_id)
 	unsigned long flags;
 	irqreturn_t ret;
 
-	spin_lock_irqsave(&this->slock, flags);
 	if (unlikely(this->dev_busy)) {
+		spin_lock_irqsave(&this->slock, flags);
 		this->irq_pending = true;
+		spin_unlock_irqrestore(&this->slock, flags);
 		dev_info(&this->pdev->dev, "Wake on touch\n");
 		ret = IRQ_HANDLED;
 	} else {
+		spin_lock_irqsave(&this->slock, flags);
 		this->dev_busy = true;
+		spin_unlock_irqrestore(&this->slock, flags);
 		ret = IRQ_WAKE_THREAD;
 	}
-	spin_unlock_irqrestore(&this->slock, flags);
+
 	return ret;
 }
 
