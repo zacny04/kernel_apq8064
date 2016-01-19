@@ -500,6 +500,8 @@ struct sk_buff {
  */
 #include <linux/slab.h>
 
+#define SKB_ALLOC_FCLONE	0x01
+#define SKB_ALLOC_RX		0x02
 
 /*
  * skb might have a dst pointer attached, refcounted or not.
