@@ -255,7 +255,7 @@ static int htable_create(struct net *net, struct xt_hashlimit_mtinfo1 *minfo,
 	}
 	hinfo->net = net;
 
-	INIT_DEFERRABLE_WORK(&hinfo->gc_work, htable_gc);
+	INIT_DELAYED_WORK_DEFERRABLE(&hinfo->gc_work, htable_gc);
 	queue_delayed_work(system_power_efficient_wq, &hinfo->gc_work,
 			   msecs_to_jiffies(hinfo->cfg.gc_interval));
 
