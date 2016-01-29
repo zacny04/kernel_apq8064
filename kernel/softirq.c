@@ -319,9 +319,19 @@ void irq_enter(void)
 static inline void invoke_softirq(void)
 {
 	if (!force_irqthreads) {
-#ifdef __ARCH_IRQ_EXIT_IRQS_DISABLED
+#if defined(__ARCH_IRQ_EXIT_IRQS_DISABLED) || defined(CONFIG_HAVE_IRQ_EXIT_ON_IRQ_STACK)
+		/*
+		 * We can safely execute softirq on the current stack if
+		 * it is the irq stack, because it should be near empty
+		 * at this stage.
+		 */
 		__do_softirq();
 #else
+		/*
+		 * Otherwise, irq_exit() is called on the task stack that can
+		 * be potentially deep already. So call softirq in its own stack
+		 * to prevent from any overrun.
+		 */
 		do_softirq_own_stack();
 #endif
 	} else {
