@@ -249,9 +249,9 @@ GRAPHITE_FLAGS = -fgraphite -fgraphite-identity -floop-flatten -ftree-loop-linea
 
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -fgcse-las -std=gnu89 -fno-pic
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -fgcse-las -std=gnu89 -fno-pic
 HOSTCFLAGS   += $(GRAPHITE_FLAGS)
-HOSTCXXFLAGS = -O3 -fgcse-las
+HOSTCXXFLAGS = -Ofast -fgcse-las
 HOSTCXXFLAGS += $(GRAPHITE_FLAGS)
 
 # Decide whether to build built-in, modular, or both.
@@ -596,7 +596,7 @@ all: vmlinux
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
 else
-KBUILD_CFLAGS	+= -O3 -fmodulo-sched -fmodulo-sched-allow-regmoves -fno-tree-vectorize
+KBUILD_CFLAGS	+= -Ofast -fmodulo-sched -fmodulo-sched-allow-regmoves -fno-tree-vectorize
 endif
 
 # conserve stack if available
