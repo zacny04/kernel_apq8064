@@ -41,6 +41,10 @@
 #ifdef CONFIG_ARM
 #include <asm/mach-types.h>
 #endif
+#ifdef CONFIG_KSM
+#include <linux/ksm.h>
+#include <linux/uksm.h>
+#endif
 
 #define SYNAPTICS_CLEARPAD_VENDOR		0x1
 #define SYNAPTICS_MAX_N_FINGERS			10
@@ -2670,6 +2674,14 @@ static int synaptics_clearpad_suspend(struct device *dev)
 	struct synaptics_clearpad *this = dev_get_drvdata(dev);
 	int rc = 0;
 
+#if defined(CONFIG_UKSM)
+	if (uksm_run_stored != UKSM_RUN_STOP)
+		uksm_run = UKSM_RUN_STOP;
+#elif defined(CONFIG_KSM_LEGACY)
+	if (ksm_run_stored != KSM_RUN_STOP)
+		ksm_run = KSM_RUN_STOP;
+#endif
+
 	LOCK(this);
 	if (likely(this->task != SYN_TASK_NO_SUSPEND))
 		this->active |= SYN_STANDBY;
@@ -2691,6 +2703,15 @@ static int synaptics_clearpad_resume(struct device *dev)
 {
 	struct synaptics_clearpad *this = dev_get_drvdata(dev);
 	int rc = 0;
+
+
+#if defined(CONFIG_UKSM)
+	if (uksm_run_stored != UKSM_RUN_STOP)
+		uksm_run = uksm_run_stored;
+#elif defined(CONFIG_KSM_LEGACY)
+	if (ksm_run_stored != KSM_RUN_STOP)
+		ksm_run = ksm_run_stored;
+#endif
 
 	LOCK(this);
 	this->active &= ~(SYN_STANDBY | SYN_STANDBY_AFTER_TASK);
