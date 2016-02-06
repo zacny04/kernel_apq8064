@@ -1032,4 +1032,9 @@ config TOUCHSCREEN_SWEEP2SLEEP
 	tristate "Sweep2Sleep for touchscreens"
 	default y
 
+config STATE_NOTIFIER
+        bool "State Notifier"
+	depends on TOUCHSCREEN_CLEARPAD
+	default y
+
 endif

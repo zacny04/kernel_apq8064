@@ -443,3 +443,5 @@ obj-$(CONFIG_CPU_FREQ_MSM) += cpufreq.o
 obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
 obj-$(CONFIG_MSM_SLEEPER) += msm-sleeper.o
 obj-$(CONFIG_TURBO_BOOST) += msm_turbo.o
+
+obj-$(CONFIG_ALUCARD_HOTPLUG) += alucard_hotplug.o
