@@ -19,10 +19,16 @@
 #include <linux/err.h>
 #include <linux/time.h>
 #include <linux/mutex.h>
-#include <linux/display_state.h>
 
 #ifdef CONFIG_STATE_NOTIFIER
 #include <linux/state_notifier.h>
+#else
+#include <linux/display_state.h>
+#endif
+
+#ifdef CONFIG_KSM
+#include <linux/ksm.h>
+#include <linux/uksm.h>
 #endif
 
 #include <video/mipi_dsi_panel.h>
@@ -120,12 +126,14 @@ static struct msm_panel_info default_pinfo = {
 
 static struct mdp_pcc_cfg_data *color_calib;
 
+#ifndef CONFIG_STATE_NOTIFIER
 bool display_on = true;
 
 bool is_display_on(void)
 {
         return display_on;
 }
+#endif
 
 static u32 ts_diff_ms(struct timespec lhs, struct timespec rhs)
 {
@@ -477,8 +485,6 @@ static int panel_on(struct platform_device *pdev)
 	set_power_suspend_state_panel_hook(POWER_SUSPEND_INACTIVE);
 #endif
 
-	display_on = true;
-
 	dev = &mfd->panel_pdev->dev;
 	dev_dbg(dev, "%s\n", __func__);
 
@@ -545,6 +551,16 @@ static int panel_on(struct platform_device *pdev)
 	}
 #ifdef CONFIG_STATE_NOTIFIER
 	state_resume();
+#else
+	display_on = true;
+#endif
+
+#if defined(CONFIG_UKSM)
+	if (uksm_run_stored != UKSM_RUN_STOP)
+		uksm_run = uksm_run_stored;
+#elif defined(CONFIG_KSM_LEGACY)
+	if (ksm_run_stored != KSM_RUN_STOP)
+		ksm_run = ksm_run_stored;
 #endif
 unlock_and_exit:
 	mutex_unlock(&dsi_data->lock);
@@ -615,12 +631,18 @@ static int panel_off(struct platform_device *pdev)
 	}
 	dev_info(dev, "%s: DISPLAY_OFF sent\n", __func__);
 
-	display_on = false;
-
 #ifdef CONFIG_STATE_NOTIFIER
 	state_suspend();
+#else
+	display_on = false;
 #endif
-
+#if defined(CONFIG_UKSM)
+	if (uksm_run_stored != UKSM_RUN_STOP)
+		uksm_run = UKSM_RUN_STOP;
+#elif defined(CONFIG_KSM_LEGACY)
+	if (ksm_run_stored != KSM_RUN_STOP)
+		ksm_run = KSM_RUN_STOP;
+#endif
 power_off:
 	if (dsi_data->lcd_power)
 		ret = dsi_data->lcd_power(FALSE);

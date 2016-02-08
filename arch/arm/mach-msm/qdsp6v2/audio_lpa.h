@@ -13,7 +13,9 @@
 #ifndef AUDIO_LPA_H
 #define AUDIO_LPA_H
 
+#ifdef CONFIG_POWERSUSPEND
 #include <linux/powersuspend.h>
+#endif
 #include <linux/wakelock.h>
 
 #define ADRV_STATUS_OBUF_GIVEN 0x00000001

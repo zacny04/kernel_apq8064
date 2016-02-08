@@ -30,7 +30,14 @@
 #include <linux/kthread.h>
 #include <linux/slab.h>
 #include <linux/kernel_stat.h>
+#ifdef CONFIG_STATE_NOTIFIER
+#include <linux/state_notifier.h>
+static struct notifier_block interactive_state_notif;
+static bool display_on;
+#else
 #include <linux/display_state.h>
+#endif
+
 #include <asm/cputime.h>
 
 #define CREATE_TRACE_POINTS
@@ -383,7 +390,9 @@ static void cpufreq_interactive_timer(unsigned long data)
 	unsigned long flags;
 	unsigned int this_hispeed_freq;
 	bool boosted;
+#ifndef CONFIG_STATE_NOTIFIER
 	bool display_on = is_display_on();
+#endif
 
 	if (!down_read_trylock(&pcpu->enable_sem))
 		return;
@@ -416,7 +425,6 @@ static void cpufreq_interactive_timer(unsigned long data)
 		timer_rate
 			= max(timer_rate, SCREEN_OFF_TIMER_RATE);
 	}
-
 
 	if (cpu_load >= go_hispeed_load || boosted) {
 		if (pcpu->target_freq < this_hispeed_freq) {
@@ -973,7 +981,9 @@ static ssize_t store_timer_rate(struct kobject *kobj,
 				val_round);
 
 	timer_rate = val_round;
+
 	prev_timer_rate = val_round;
+
 	return count;
 }
 
@@ -1284,6 +1294,25 @@ static void cpufreq_interactive_nop_timer(unsigned long data)
 {
 }
 
+#ifdef CONFIG_STATE_NOTIFIER
+static int state_notifier_callback(struct notifier_block *this,
+				unsigned long event, void *data)
+{
+	switch (event) {
+		case STATE_NOTIFIER_ACTIVE:
+			display_on = true;
+			break;
+		case STATE_NOTIFIER_SUSPEND:
+			display_on = false;
+			break;
+		default:
+			break;
+	}
+
+	return NOTIFY_OK;
+}
+#endif
+
 static int __init cpufreq_interactive_init(void)
 {
 	unsigned int i;
@@ -1313,6 +1342,13 @@ static int __init cpufreq_interactive_init(void)
 	if (IS_ERR(speedchange_task))
 		return PTR_ERR(speedchange_task);
 
+#ifdef CONFIG_STATE_NOTIFIER
+	interactive_state_notif.notifier_call = state_notifier_callback;
+	if (state_register_client(&interactive_state_notif))
+		pr_err("%s: Failed to register State notifier callback\n",
+			__func__);
+#endif
+
 	sched_setscheduler_nocheck(speedchange_task, SCHED_FIFO, &param);
 	get_task_struct(speedchange_task);
 
@@ -1330,6 +1366,10 @@ module_init(cpufreq_interactive_init);
 
 static void __exit cpufreq_interactive_exit(void)
 {
+#ifdef CONFIG_STATE_NOTIFIER
+	state_unregister_client(&interactive_state_notif);
+	interactive_state_notif.notifier_call = NULL;
+#endif
 	cpufreq_unregister_governor(&cpufreq_gov_interactive);
 	kthread_stop(speedchange_task);
 	put_task_struct(speedchange_task);

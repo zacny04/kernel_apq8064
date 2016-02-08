@@ -28,6 +28,10 @@
 #include <linux/state_notifier.h>
 #endif
 
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
+#endif
+
 /*
  * alucard_hotplug_mutex protects hotplug start/stop phase.
  */
@@ -55,7 +59,9 @@ struct hotplug_cpuparm {
 static DEFINE_PER_CPU(struct hotplug_cpuinfo, od_hotplug_cpuinfo);
 static DEFINE_PER_CPU(struct hotplug_cpuparm, od_hotplug_cpuparm);
 
+#ifndef CONFIG_POWERSUSPEND
 static struct notifier_block notif;
+#endif
 static struct delayed_work alucard_hotplug_work;
 static struct workqueue_struct *alucard_hp_wq;
 
@@ -335,6 +341,30 @@ static int state_notifier_callback(struct notifier_block *this,
 }
 #endif
 
+#ifdef CONFIG_POWERSUSPEND
+static void __alucard_hotplug_suspend(struct power_suspend *handler)
+{
+	if (hotplug_tuners_ins.hotplug_suspend == 1 &&
+				hotplug_tuners_ins.suspended == false) {
+			hotplug_tuners_ins.suspended = true;
+			pr_info("Alucard HotPlug suspended.\n");
+	}
+}
+
+static void __ref __alucard_hotplug_resume(struct power_suspend *handler)
+{
+	if (hotplug_tuners_ins.suspended == true) {
+			hotplug_tuners_ins.suspended = false;
+			pr_info("Alucard HotPlug Resumed.\n");
+	}
+}
+
+static struct power_suspend alucard_hotplug_power_suspend_driver = {
+	.suspend = __alucard_hotplug_suspend,
+	.resume = __alucard_hotplug_resume,
+};
+#endif
+
 static int alucard_hotplug_callback(struct notifier_block *nb,
 			unsigned long action, void *data)
 {
@@ -404,6 +434,10 @@ static void hotplug_start(void)
 	if (state_register_client(&notif))
 		pr_err("Failed to register State notifier callback for Alucard Hotplug\n");
 #endif
+
+#ifdef CONFIG_POWERSUSPEND
+	register_power_suspend(&alucard_hotplug_power_suspend_driver);
+#endif
 	mutex_unlock(&alucard_hotplug_mutex);
 }
 
@@ -413,6 +447,9 @@ static void hotplug_stop(void)
 #ifdef CONFIG_STATE_NOTIFIER
 	state_unregister_client(&notif);
 	notif.notifier_call = NULL;
+#endif
+#ifdef CONFIG_POWERSUSPEND
+	unregister_power_suspend(&alucard_hotplug_power_suspend_driver);
 #endif
 	cancel_delayed_work_sync(&alucard_hotplug_work);
 	get_online_cpus();

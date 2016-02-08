@@ -38,6 +38,11 @@
 #include <linux/powersuspend.h>
 #endif
 
+#ifdef CONFIG_STATE_NOTIFIER
+#include <linux/state_notifier.h>
+static struct notifier_block auto_hotplug_state_notif;
+#endif
+
 /*
  * Enable debug output to dump the average
  * calculations and ring buffer array values
@@ -438,6 +443,40 @@ static struct power_suspend auto_hotplug_suspend = {
 };
 #endif /* CONFIG_POWERSUSPEND */
 
+#ifdef CONFIG_STATE_NOTIFIER
+static int state_notifier_callback(struct notifier_block *this,
+				unsigned long event, void *data)
+{
+	switch (event) {
+		case STATE_NOTIFIER_ACTIVE:
+			#ifdef DEBUG
+				pr_info("auto_hotplug: late resume handler\n");
+			#endif
+                
+			queue_work(autohp_hp_wq, &hotplug_online_all_work);
+			break;
+		case STATE_NOTIFIER_SUSPEND:
+			#ifdef DEBUG
+				pr_info("auto_hotplug: early suspend handler\n");
+			#endif
+			/* Cancel all scheduled delayed work to avoid races */
+			cancel_delayed_work_sync(&hotplug_offline_work);
+			cancel_delayed_work_sync(&hotplug_decision_work);
+			if (num_online_cpus() > 1) {
+				#ifdef DEBUG
+					pr_info("auto_hotplug: Offlining CPUs for suspend\n");
+				#endif
+				queue_work_on(BOOT_CPU, system_power_efficient_wq, &hotplug_offline_all_work);
+			}
+			break;
+		default:
+			break;
+	}
+
+	return NOTIFY_OK;
+}
+#endif
+
 int __init auto_hotplug_init(void)
 {
 	#ifdef DEBUG
@@ -464,6 +503,15 @@ int __init auto_hotplug_init(void)
 #ifdef CONFIG_POWERSUSPEND
 	register_power_suspend(&auto_hotplug_suspend);
 #endif
+
+
+#ifdef CONFIG_STATE_NOTIFIER
+	auto_hotplug_state_notif.notifier_call = state_notifier_callback;
+	if (state_register_client(&auto_hotplug_state_notif))
+		pr_err("%s: Failed to register State notifier callback\n",
+			__func__);
+#endif
+
 	return 0;
 }
 late_initcall(auto_hotplug_init);

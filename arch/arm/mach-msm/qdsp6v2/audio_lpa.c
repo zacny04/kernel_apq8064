@@ -27,7 +27,9 @@
 #include <linux/dma-mapping.h>
 #include <linux/debugfs.h>
 #include <linux/delay.h>
+#ifdef CONFIG_POWERSUSPEND
 #include <linux/powersuspend.h>
+#endif
 #include <linux/msm_ion.h>
 #include <linux/list.h>
 #include <linux/slab.h>
@@ -1203,7 +1205,7 @@ static void audlpa_resume(struct power_suspend *h)
 	audlpa_post_event(ctl->audio, AUDIO_EVENT_RESUME, payload);
 }
 #endif
-
+ 
 #ifdef CONFIG_DEBUG_FS
 static ssize_t audlpa_debug_open(struct inode *inode, struct file *file)
 {
@@ -1366,6 +1368,7 @@ static int audio_open(struct inode *inode, struct file *file)
 	audio->suspend_ctl.audio = audio;
 	register_power_suspend(&audio->suspend_ctl.node);
 #endif
+ 
 	for (i = 0; i < AUDLPA_EVENT_NUM; i++) {
 		e_node = kmalloc(sizeof(struct audlpa_event), GFP_KERNEL);
 		if (e_node)
