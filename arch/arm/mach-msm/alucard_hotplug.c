@@ -83,7 +83,11 @@ static struct hotplug_tuners {
 #endif
 	.min_cpus_online = 1,
 	.maxcoreslimit = NR_CPUS,
+#ifdef CONFIG_MACH_SONY_YUGA
+	.maxcoreslimit_sleep = 2,
+#else
 	.maxcoreslimit_sleep = 3,
+#endif
 	.hotplug_suspend = 0,
 	.suspended = false,
 };
@@ -792,11 +796,11 @@ static int __init alucard_hotplug_init(void)
 	unsigned int cpu;
 	int ret;
 	unsigned int hotplug_freq[NR_CPUS][2] = {
-#ifdef CONFIG_MACH_LGE
-		{0, 1497600},
-		{652800, 1190400},
-		{652800, 1190400},
-		{652800, 0}
+#ifdef CONFIG_MACH_SONY_YUGA
+		{0, 1458000},
+		{702000, 1134000},
+		{702000, 1134000},
+		{702000, 0}
 #else
 		{0, 1242000},
 		{810000, 1242000},
