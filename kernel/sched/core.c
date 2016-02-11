@@ -6692,13 +6692,6 @@ static struct sched_domain_topology_level default_topology[] = {
 	{ sd_init_BOOK, cpu_book_mask, },
 #endif
 	{ sd_init_CPU, cpu_cpu_mask, },
-	{ NULL, },
-};
-
-static struct sched_domain_topology_level *sched_domain_topology = default_topology;
-
-#define for_each_sd_topology(tl)			\
-	for (tl = sched_domain_topology; tl->init; tl++)
 
 #ifdef CONFIG_NUMA
 	{ sd_init_NODE, cpu_node_mask, SDTL_OVERLAP, },
@@ -6706,6 +6699,9 @@ static struct sched_domain_topology_level *sched_domain_topology = default_topol
 #endif
 	{ NULL, },
 };
+
+#define for_each_sd_topology(tl)			\
+	for (tl = sched_domain_topology; tl->init; tl++)
 
 static struct sched_domain_topology_level *sched_domain_topology = default_topology;
 
