@@ -77,7 +77,7 @@ static irqreturn_t pwrkey_press_irq(int irq, void *_pwrkey)
 
 	if (atomic_cmpxchg(&pwrkey->press, false, true) != false) {
 		dev_warn(pwrkey->pwr->dev.parent, "unexpected key press\n");
-		__cancel_delayed_work(&pwrkey->confirm_work);
+		cancel_delayed_work(&pwrkey->confirm_work);
 		schedule_delayed_work(&pwrkey->confirm_work, CHECK_DELAY);
 	}
 
@@ -97,7 +97,7 @@ static irqreturn_t pwrkey_release_irq(int irq, void *_pwrkey)
 
 	if (atomic_cmpxchg(&pwrkey->press, true, false) != true) {
 		dev_warn(pwrkey->pwr->dev.parent, "unexpected key release\n");
-		__cancel_delayed_work(&pwrkey->confirm_work);
+		cancel_delayed_work(&pwrkey->confirm_work);
 		schedule_delayed_work(&pwrkey->confirm_work, CHECK_DELAY);
 	}
 
