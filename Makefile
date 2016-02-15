@@ -352,6 +352,7 @@ DEPMOD		= /sbin/depmod
 KALLSYMS	= scripts/kallsyms
 PERL		= perl
 CHECK		= sparse
+GCCVERSIONGTEQ6 := $(shell expr `arm-eabi-gcc -dumpversion | cut -f1 -d.` \>= 6)
 
 # Use the wrapper for the compiler.  This wrapper scans for new
 # warnings and causes the build to stop upon encountering them.
@@ -395,12 +396,16 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 KBUILD_CPPFLAGS := -D__KERNEL__
 
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common \
-		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks \
-		   -std=gnu89 -fno-pic \
-           $(GEN_OPT_FLAGS)
+		-fno-strict-aliasing -fno-common \
+		-Werror-implicit-function-declaration \
+		-Wno-format-security \
+		-fno-delete-null-pointer-checks \
+		-std=gnu89 -fno-pic \
+		$(GEN_OPT_FLAGS)
+
+ifeq "$(GCCVERSIONGTEQ6)" "1"
+    KBUILD_CFLAGS += -Wno-tautological-compare -Wno-unused-const-variable -Wno-bool-compare
+endif
 
 KBUILD_CFLAGS   += $(GRAPHITE_FLAGS)
 
