@@ -25,6 +25,7 @@
 #include <linux/sched.h>
 #include <linux/workqueue.h>
 #include <linux/slab.h>
+#include <linux/version.h>
 
 /*
  * dbs is used in this file as a shortform for demandbased switching
@@ -772,7 +773,11 @@ static inline void dbs_timer_init(struct cpu_dbs_info_s *dbs_info)
 		delay -= jiffies % delay;
 
 	dbs_info->sample_type = DBS_NORMAL_SAMPLE;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3,7,0)
 	INIT_DEFERRABLE_WORK(&dbs_info->work, do_dbs_timer);
+#else
+	INIT_DELAYED_WORK_DEFERRABLE(&dbs_info->work, do_dbs_timer);
+#endif
 	queue_delayed_work_on(dbs_info->cpu, dbs_wq, &dbs_info->work, delay);
 }
 
