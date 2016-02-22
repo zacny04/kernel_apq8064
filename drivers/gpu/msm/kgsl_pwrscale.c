@@ -367,6 +367,7 @@ int kgsl_pwrscale_init(struct kgsl_device *device)
 
 	ret = kobject_init_and_add(&device->pwrscale_kobj, &ktype_pwrscale,
 		&device->dev->kobj, "pwrscale");
+
 	if (ret)
 		return ret;
 

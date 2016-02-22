@@ -57,7 +57,7 @@
 #elif defined CONFIG_MSM_SLEEP_STATS_DEVICE
 #define ADRENO_DEFAULT_PWRSCALE_POLICY  (&kgsl_pwrscale_policy_idlestats)
 #else
-#define ADRENO_DEFAULT_PWRSCALE_POLICY  (&kgsl_pwrscale_policy_conservative)
+#define ADRENO_DEFAULT_PWRSCALE_POLICY  NULL
 #endif
 
 
