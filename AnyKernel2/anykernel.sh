@@ -3,12 +3,12 @@
 
 ## AnyKernel setup
 # EDIFY properties
-kernel.string="Black Kernel for CM12/13-based ROMs"
+kernel.string="Airless Kernel for RR/CM13/MM6.0 roms"
 do.devicecheck=1
 do.initd=0
 do.modules=1
 do.cleanup=1
-device.name1=pollux
+device.name1=yuga
 
 # shell variables
 block=/dev/block/platform/msm_sdcc.1/by-name/boot;
