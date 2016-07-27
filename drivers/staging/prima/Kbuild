@@ -619,6 +619,7 @@ endif
 
 # Fix build for GCC 4.7
 EXTRA_CFLAGS += -Os -Wno-maybe-uninitialized -Wno-unused-function -Wno-unused-variable
+/Makefile
 
 KBUILD_CPPFLAGS += $(CDEFINES)
 
