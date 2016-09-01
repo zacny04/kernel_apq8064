@@ -3,12 +3,13 @@
 
 ## AnyKernel setup
 # EDIFY properties
-kernel.string="Black Kernel for CM12/13-based ROMs"
+kernel.string="Airless Kernel (Odin) for CM/AOSP-based Marshmallow ROMs"
 do.devicecheck=1
 do.initd=0
-do.modules=1
+do.modules=0
 do.cleanup=1
-device.name1=pollux
+device.name1=odin
+device.name2=C6503
 
 # shell variables
 block=/dev/block/platform/msm_sdcc.1/by-name/boot;
@@ -118,6 +119,15 @@ replace_line() {
   fi;
 }
 
+# prepend_lines <file> <starting line> <ending line> <prepend string>
+prepend_lines() {
+  if [ ! -z "$(grep "$2" $1)" ]; then
+    line=`grep "$2" $1`;
+    sed -i "/${line}/,/${3}/s/^/${4}/" $1;
+  fi;
+}
+
+
 # remove_line <file> <line match string>
 remove_line() {
   if [ ! -z "$(grep "$2" $1)" ]; then
@@ -191,6 +201,8 @@ dump_boot;
 
 # begin ramdisk changes
 
+prepend_lines $ramdisk/init.qcom.rc "service mpdecision" "disabled" "#";
+prepend_lines $ramdisk/init.qcom.power.rc "start mpdecision" "" "#";
 
 # end ramdisk changes
 
