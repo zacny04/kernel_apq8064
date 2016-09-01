@@ -3,13 +3,13 @@
 
 ## AnyKernel setup
 # EDIFY properties
-kernel.string="Airless Kernel (Odin) for CM/AOSP-based Marshmallow ROMs"
+kernel.string="Airless Kernel (yuga) for CM/AOSP-based Marshmallow ROMs"
 do.devicecheck=1
 do.initd=0
 do.modules=0
 do.cleanup=1
-device.name1=odin
-device.name2=C6503
+device.name1=yuga
+device.name2=C6603
 
 # shell variables
 block=/dev/block/platform/msm_sdcc.1/by-name/boot;
@@ -126,7 +126,6 @@ prepend_lines() {
     sed -i "/${line}/,/${3}/s/^/${4}/" $1;
   fi;
 }
-
 
 # remove_line <file> <line match string>
 remove_line() {
